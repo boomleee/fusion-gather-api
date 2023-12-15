@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
 
 export class UpdateDummyDto {
   @IsOptional()
@@ -8,8 +8,8 @@ export class UpdateDummyDto {
 
   @IsOptional()
   @IsNotEmpty()
-  @IsNumber()
-  phone?: number;
+  @IsString()
+  phone?: string;
 
   @IsOptional()
   @IsString()

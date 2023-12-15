@@ -4,7 +4,6 @@ import { AppService } from './app.service';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DummyModule } from './dummy/dummy.module';
-import { join } from 'path';
 import { Dummy } from './dummy/entities/dummy.entity';
 
 @Module({

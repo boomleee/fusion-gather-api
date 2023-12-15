@@ -9,7 +9,7 @@ export class Dummy {
   name: string;
 
   @Column()
-  phone: number;
+  phone: string;
 
   @Column({ nullable: true })
   dob: string;
