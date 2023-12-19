@@ -1,0 +1,120 @@
+{
+	"info": {
+		"_postman_id": "4ae83f98-436e-4bb0-ba22-ca06a1b9a9af",
+		"name": "FusionGather",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
+		"_exporter_id": "25189884",
+		"_collection_link": "https://martian-sunset-300704.postman.co/workspace/Team-Workspace~656d0ec0-e7aa-4eef-8f76-03ba4d977d65/collection/25189884-4ae83f98-436e-4bb0-ba22-ca06a1b9a9af?action=share&source=collection_link&creator=25189884"
+	},
+	"item": [
+		{
+			"name": "Add New",
+			"request": {
+				"method": "POST",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Tuan Anzzzh\",\r\n    \"phone\": \"0834161202\",\r\n    \"dob\": \"2002-12-16T00:00:00.000Z\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/dummy",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"dummy"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Get All",
+			"protocolProfileBehavior": {
+				"disableBodyPruning": true
+			},
+			"request": {
+				"method": "GET",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/dummy",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"dummy"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Delete",
+			"request": {
+				"method": "DELETE",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/dummy/8",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"dummy",
+						"8"
+					]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "Update",
+			"request": {
+				"method": "PATCH",
+				"header": [],
+				"body": {
+					"mode": "raw",
+					"raw": "{\r\n    \"name\": \"Tuan Anzzzh\",\r\n    \"phone\": \"0834161202\"\r\n}",
+					"options": {
+						"raw": {
+							"language": "json"
+						}
+					}
+				},
+				"url": {
+					"raw": "{{base_url}}/dummy/1",
+					"host": [
+						"{{base_url}}"
+					],
+					"path": [
+						"dummy",
+						"1"
+					]
+				}
+			},
+			"response": []
+		}
+	]
+}
