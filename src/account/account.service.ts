@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { UserService } from 'src/user/user.service';
 import { RegisterDto } from './dto/register.dto';
@@ -35,20 +35,40 @@ export class AccountService {
     return await this.accountRepository.save(newAccount);
   }
 
-  findAll() {
-    return `This action returns all account`;
+  async findAll(): Promise<Account[]> {
+    return await this.accountRepository.find();
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} account`;
+  async findOne(id: number): Promise<Account> {
+    const existingAcount = await this.accountRepository.findOne({where: {id}});
+
+    if(!existingAcount) {
+      throw new NotFoundException(`Account with ID ${id} not found`);
+    }
+
+    return existingAcount;
   }
 
-  update(id: number, updateAccountDto: UpdateAccountDto) {
-    return `This action updates a #${id} account`;
+  async update(id: number, updateAccountDto: UpdateAccountDto): Promise<Account> {
+    const existingAccount = await this.accountRepository.findOne({where: {id}});
+
+    if (!existingAccount) {
+      throw new NotFoundException(`Account with ID ${id} not found`);
+    }
+
+    Object.assign(existingAccount, updateAccountDto)
+
+    return await this.accountRepository.save(existingAccount);
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} account`;
+  async remove(id: number): Promise<void> {
+    const accountToRemove = await this.accountRepository.findOne({where: {id}});
+
+    if (!accountToRemove) {
+      throw new NotFoundException(`Account with ID ${id} not found`);
+    }
+
+    await this.accountRepository.remove(accountToRemove);
   }
 
   private async hashPassword(password: string): Promise<string> {
