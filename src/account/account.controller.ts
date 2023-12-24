@@ -12,6 +12,7 @@ import { UpdateAccountDto } from './dto/update-account.dto';
 import { UserService } from 'src/user/user.service';
 import { RegisterDto } from './dto/register.dto';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { ChangePasswordDto } from 'src/account/dto/change-password.dto';
 
 @Controller('account')
 export class AccountController {
@@ -36,6 +37,12 @@ export class AccountController {
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateAccountDto: UpdateAccountDto) {
     return this.accountService.update(+id, updateAccountDto);
+  }
+
+  @Post('/change-password')
+  changePassword(@Body() changePasswordDto: ChangePasswordDto) {
+    console.log(changePasswordDto);
+    return this.accountService.changePassword(changePasswordDto);
   }
 
   @Delete(':id')

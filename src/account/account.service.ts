@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { UserService } from 'src/user/user.service';
 import { RegisterDto } from './dto/register.dto';
@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { MailerService } from '@nestjs-modules/mailer';
+import { ChangePasswordDto } from 'src/account/dto/change-password.dto';
 
 @Injectable()
 export class AccountService {
@@ -89,5 +90,26 @@ export class AccountService {
     const hash = await bcrypt.hash(password, salt);
 
     return hash
+  }
+
+  async changePassword(changePasswordDto: ChangePasswordDto): Promise<Account> {
+    const {username, oldPassword, newPassword } = changePasswordDto;
+    console.log(changePasswordDto);
+    const existingAccount = await this.accountRepository.findOne({where: {username : changePasswordDto.username}});
+
+    if (!existingAccount) {
+      throw new NotFoundException(`Account with ID ${username} not found`);
+    }
+
+    const isMatch = await bcrypt.compare(oldPassword, existingAccount.password);
+
+    if (!isMatch) {
+      throw new BadRequestException('Old password is not correct');
+    }
+
+    const hashPassword = await this.hashPassword(newPassword);
+    existingAccount.password = hashPassword;
+
+    return await this.accountRepository.save(existingAccount);
   }
 }
