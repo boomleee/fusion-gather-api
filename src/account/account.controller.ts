@@ -6,12 +6,16 @@ import {
   Patch,
   Param,
   Delete,
+  HttpStatus,
+  Res,
 } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { UpdateAccountDto } from './dto/update-account.dto';
-import { UserService } from 'src/user/user.service';
 import { RegisterDto } from './dto/register.dto';
-import { CreateUserDto } from 'src/user/dto/create-user.dto';
+import { VerifyAccountDto } from './dto/verify-account.dto';
+import { ResetRequestDto } from './dto/reset-request.dto';
+import { ResetPasswordCodeDto } from './dto/reset-password-code.dto';
+import { Response } from 'express';
 import { ChangePasswordDto } from 'src/account/dto/change-password.dto';
 
 @Controller('account')
@@ -48,5 +52,31 @@ export class AccountController {
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.accountService.remove(+id);
+  }
+
+  @Post('/verify')
+  verify(@Body() verifyAccountDto: VerifyAccountDto) {
+    return this.accountService.verifyAccount(verifyAccountDto);
+  }
+
+  @Post('/reset-password')
+  resetPassword(@Body() resetRequestDto: ResetRequestDto) {
+    return this.accountService.requestResetPassword(resetRequestDto);
+  }
+
+  @Post('/reset-password/check-code')
+  checkVerificationCode(
+    @Body() resetPasswordCodeDto: ResetPasswordCodeDto,
+    @Res() res: Response,
+  ) {
+    this.accountService
+      .checkVerificationCode(resetPasswordCodeDto)
+      .then((isVerified) => {
+        if (isVerified) {
+          return res.status(HttpStatus.OK).send();
+        } else {
+          return res.status(HttpStatus.BAD_REQUEST).send();
+        }
+      });
   }
 }
