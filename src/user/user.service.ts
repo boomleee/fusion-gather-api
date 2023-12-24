@@ -21,28 +21,28 @@ export class UserService {
   }
 
   async findOne(id: number): Promise<User> {
-    const existingUser = await this.userRepository.findOne({where: {id}});
+    const existingUser = await this.userRepository.findOne({ where: { id } });
 
     if (!existingUser) {
-    throw new NotFoundException(`User with ID ${id} not found`);
+      throw new NotFoundException(`User with ID ${id} not found`);
     }
 
     return existingUser;
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
-    const existingUser = await this.userRepository.findOne({where: {id}});
+    const existingUser = await this.userRepository.findOne({ where: { id } });
 
     if (!existingUser) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }
-    Object.assign(existingUser, updateUserDto)
+    Object.assign(existingUser, updateUserDto);
 
     return await this.userRepository.save(existingUser);
   }
 
   async remove(id: number): Promise<void> {
-    const userToRemove = await this.userRepository.findOne({where: {id}});
+    const userToRemove = await this.userRepository.findOne({ where: { id } });
 
     if (!userToRemove) {
       throw new NotFoundException(`User with ID ${id} not found`);
