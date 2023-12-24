@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { UserService } from 'src/user/user.service';
 import { RegisterDto } from './dto/register.dto';
@@ -154,20 +154,11 @@ export class AccountService {
   }
 
   async changePassword(changePasswordDto: ChangePasswordDto): Promise<Account> {
-    const {username, oldPassword, newPassword } = changePasswordDto;
-    console.log(changePasswordDto);
-    const existingAccount = await this.accountRepository.findOne({where: {username : changePasswordDto.username}});
-
+    const { email, newPassword } = changePasswordDto;
+    const existingAccount = await this.findAccountByEmail(email);
     if (!existingAccount) {
-      throw new NotFoundException(`Account with ID ${username} not found`);
+      throw new NotFoundException(`Account with ID ${email} not found`);
     }
-
-    const isMatch = await bcrypt.compare(oldPassword, existingAccount.password);
-
-    if (!isMatch) {
-      throw new BadRequestException('Old password is not correct');
-    }
-
     const hashPassword = await this.hashPassword(newPassword);
     existingAccount.password = hashPassword;
 

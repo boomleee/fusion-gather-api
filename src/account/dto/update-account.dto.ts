@@ -7,5 +7,4 @@ export class UpdateAccountDto extends PartialType(CreateAccountDto) {
   @IsString()
   @IsOptional()
   password: string;
-
 }

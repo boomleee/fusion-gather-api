@@ -43,9 +43,8 @@ export class AccountController {
     return this.accountService.update(+id, updateAccountDto);
   }
 
-  @Post('/change-password')
+  @Post('/reset-password/new-password')
   changePassword(@Body() changePasswordDto: ChangePasswordDto) {
-    console.log(changePasswordDto);
     return this.accountService.changePassword(changePasswordDto);
   }
 
