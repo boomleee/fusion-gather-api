@@ -6,7 +6,8 @@ import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { Account } from './entities/account.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import * as bcrypt from 'bcrypt'
+import * as bcrypt from 'bcrypt';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class AccountService {
@@ -14,6 +15,7 @@ export class AccountService {
     @InjectRepository(Account)
     private readonly accountRepository: Repository<Account>,
     private readonly userService: UserService,
+    private mailerService: MailerService,
   ) {}
   async create(registerDto: RegisterDto) {
     const createUserDto: CreateUserDto = {
@@ -32,6 +34,16 @@ export class AccountService {
       password: hashPassword,
     });
 
+    try {
+      await this.mailerService.sendMail({
+        to: registerDto.email,
+        subject: 'Welcome to my website',
+        text: 'Hello world',
+        html: '<b>Hello world </b>',
+      });
+    } catch (error) {
+      console.log(error);
+    }
     return await this.accountRepository.save(newAccount);
   }
 
