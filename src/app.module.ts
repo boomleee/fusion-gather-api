@@ -1,17 +1,32 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DummyModule } from './dummy/dummy.module';
-import { Dummy } from './dummy/entities/dummy.entity';
 import { AccountModule } from './account/account.module';
 import { UserModule } from './user/user.module';
 import { dataSourceOptions } from 'db/data-source';
+import { MailerModule } from '@nestjs-modules/mailer';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot(dataSourceOptions),
+    MailerModule.forRootAsync({
+      useFactory: async () => ({
+        transport: {
+          host: 'smtp.gmail.com',
+          secure: false,
+          auth: {
+            user: 'fusiongather9@gmail.com',
+            pass: 'njpxclvmemagfeec',
+          },
+        },
+        defaults: {
+          from: 'No Reply',
+        },
+      }),
+      inject: [],
+    }),
     DummyModule,
     AccountModule,
     UserModule,
