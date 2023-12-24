@@ -10,7 +10,41 @@ export class UserService {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {}
+
+  //check email exist
+  async checkEmailExist(email: string) {
+    const user = await this.userRepository.findOne({
+      where: { email },
+    });
+    if (user) return true;
+    else return false;
+  }
+
+  //check phone number exist
+  async checkPhoneNumberExist(phoneNumber: string) {
+    const user = await this.userRepository.findOne({
+      where: { phoneNumber },
+    });
+    if (user) return true;
+    else return false;
+  }
+
   async create(createUserDto: CreateUserDto) {
+    const isEmailExist = await this.checkEmailExist(createUserDto.email);
+    const isPhoneNumberExist = await this.checkPhoneNumberExist(
+      createUserDto.phoneNumber,
+    );
+
+    if (isEmailExist) {
+      throw new NotFoundException(`Email ${createUserDto.email} exist`);
+    }
+
+    if (isPhoneNumberExist) {
+      throw new NotFoundException(
+        `Phone number ${createUserDto.phoneNumber} exist`,
+      );
+    }
+
     const user = this.userRepository.create(createUserDto);
 
     return await this.userRepository.save(user);

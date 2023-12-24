@@ -21,6 +21,16 @@ export class AccountService {
     private readonly userService: UserService,
     private mailerService: MailerService,
   ) {}
+
+  //check username exist
+  async checkUsernameExist(username: string) {
+    const account = await this.accountRepository.findOne({
+      where: { username },
+    });
+    if (account) return true;
+    else return false;
+  }
+
   async create(registerDto: RegisterDto) {
     const createUserDto: CreateUserDto = {
       firstName: registerDto.firstName,
@@ -29,6 +39,12 @@ export class AccountService {
       dob: registerDto.dob,
       phoneNumber: registerDto.phoneNumber,
     };
+    const isUsernameExist = await this.checkUsernameExist(registerDto.username);
+
+    if (isUsernameExist) {
+      throw new NotFoundException(`Username ${registerDto.username} exist`);
+    }
+
     const user = await this.userService.create(createUserDto);
 
     const hashPassword = await this.hashPassword(registerDto.password);
@@ -59,6 +75,18 @@ export class AccountService {
 
     if (!existingAcount) {
       throw new NotFoundException(`Account with ID ${id} not found`);
+    }
+
+    return existingAcount;
+  }
+
+  async findOneByUsername(username: string): Promise<Account> {
+    const existingAcount = await this.accountRepository.findOne({
+      where: { username },
+    });
+
+    if (!existingAcount) {
+      throw new NotFoundException(`Account with username ${username} not found`);
     }
 
     return existingAcount;
