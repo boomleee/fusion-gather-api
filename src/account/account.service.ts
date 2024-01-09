@@ -12,6 +12,8 @@ import { VerifyAccountDto } from './dto/verify-account.dto';
 import { ResetRequestDto } from './dto/reset-request.dto';
 import { ResetPasswordCodeDto } from './dto/reset-password-code.dto';
 import { ChangePasswordDto } from 'src/account/dto/change-password.dto';
+import { JwtService } from '@nestjs/jwt';
+import { LoginDto } from './dto/login.dto';
 
 @Injectable()
 export class AccountService {
@@ -20,6 +22,7 @@ export class AccountService {
     private readonly accountRepository: Repository<Account>,
     private readonly userService: UserService,
     private mailerService: MailerService,
+    private jwtService: JwtService,
   ) {}
 
   //check username exist
@@ -86,7 +89,9 @@ export class AccountService {
     });
 
     if (!existingAcount) {
-      throw new NotFoundException(`Account with username ${username} not found`);
+      throw new NotFoundException(
+        `Account with username ${username} not found`,
+      );
     }
 
     return existingAcount;
@@ -191,5 +196,25 @@ export class AccountService {
     existingAccount.password = hashPassword;
 
     return await this.accountRepository.save(existingAccount);
+  }
+
+  private async generateToken(payload: { id: number; username: string }) {
+    const access_token = await this.jwtService.signAsync(payload);
+    return access_token;
+  }
+
+  async login(loginDto: LoginDto) {
+    const account = await this.accountRepository.findOne({
+      where: { username: loginDto.username },
+    });
+    if (!account) {
+      throw new NotFoundException('Username is not exist');
+    }
+    const checkPass = bcrypt.compareSync(loginDto.password, account.password);
+    if (!checkPass) {
+      throw new NotFoundException('Password is not correct');
+    }
+    const payload = { id: account.id, username: account.username };
+    return this.generateToken(payload);
   }
 }
