@@ -7,9 +7,14 @@ import { AccountModule } from './account/account.module';
 import { UserModule } from './user/user.module';
 import { dataSourceOptions } from 'db/data-source';
 import { MailerModule } from '@nestjs-modules/mailer';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+      isGlobal: true
+    }),
     TypeOrmModule.forRoot(dataSourceOptions),
     MailerModule.forRootAsync({
       useFactory: async () => ({
@@ -34,4 +39,4 @@ import { MailerModule } from '@nestjs-modules/mailer';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

@@ -10,6 +10,8 @@ import {
   Res,
   UsePipes,
   ValidationPipe,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
 import { AccountService } from './account.service';
 import { UpdateAccountDto } from './dto/update-account.dto';
@@ -20,10 +22,11 @@ import { ResetPasswordCodeDto } from './dto/reset-password-code.dto';
 import { Response } from 'express';
 import { ChangePasswordDto } from 'src/account/dto/change-password.dto';
 import { LoginDto } from './dto/login.dto';
+import { RefreshGuard } from 'src/guards/refresh.guard';
 
 @Controller('account')
 export class AccountController {
-  constructor(private readonly accountService: AccountService) {}
+  constructor(private readonly accountService: AccountService) { }
 
   @Post('/register')
   @UsePipes(ValidationPipe)
@@ -93,5 +96,13 @@ export class AccountController {
   @UsePipes(ValidationPipe)
   login(@Body() loginDto: LoginDto) {
     return this.accountService.login(loginDto);
+  }
+
+  @UseGuards(RefreshGuard)
+  @Post('refresh')
+  refreshToken(
+    @Req() req: any
+  ) {
+    return this.accountService.refreshToken(req.user.id)
   }
 }
