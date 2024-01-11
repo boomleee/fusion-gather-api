@@ -6,6 +6,7 @@ import { Account } from './entities/account.entity';
 import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/entities/user.entity';
 import { JwtModule } from '@nestjs/jwt';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
@@ -13,11 +14,12 @@ import { JwtModule } from '@nestjs/jwt';
     TypeOrmModule.forFeature([User]),
     JwtModule.register({
       global: true,
-      secret: 'fgt2023',
-      signOptions: { expiresIn: '12h' },
+      secret: `rXQBMduVMEsrQxRTK9dupYTkXfgsHl7LUN1V1jBBCbtjjvMSV7iMACdOtk+lt+q3
+3s5E/t+/i2YwHEeK76HJ3Q==`,
+      signOptions: { expiresIn: '10h' },
     }),
   ],
   controllers: [AccountController],
   providers: [AccountService, UserService],
 })
-export class AccountModule {}
+export class AccountModule { }
