@@ -8,6 +8,7 @@ import { UserModule } from './user/user.module';
 import { dataSourceOptions } from 'db/data-source';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule } from '@nestjs/config';
+import { EventModule } from './event/event.module';
 
 @Module({
   imports: [
@@ -35,6 +36,7 @@ import { ConfigModule } from '@nestjs/config';
     DummyModule,
     AccountModule,
     UserModule,
+    EventModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -6,7 +6,6 @@ import { Account } from './entities/account.entity';
 import { UserService } from 'src/user/user.service';
 import { User } from 'src/user/entities/user.entity';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
