@@ -8,113 +8,265 @@
 	},
 	"item": [
 		{
-			"name": "Add New",
-			"request": {
-				"method": "POST",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"name\": \"Tuan Anzzzh\",\r\n    \"phone\": \"0834161202\",\r\n    \"dob\": \"2002-12-16T00:00:00.000Z\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
+			"name": "Dummy",
+			"item": [
+				{
+					"name": "Add New",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "    {\r\n    \"name\": \"Tuan Anzzzh\",\r\n    \"phone\": \"0834161202\",\r\n    \"dob\": \"2002-12-16T00:00:00.000Z\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/dummy",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dummy"
+							]
 						}
-					}
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "{{base_url}}/dummy",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"dummy"
-					]
+				{
+					"name": "Get All",
+					"protocolProfileBehavior": {
+						"disableBodyPruning": true
+					},
+					"request": {
+						"method": "GET",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/dummy",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dummy"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/dummy/10",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dummy",
+								"10"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update",
+					"request": {
+						"method": "PATCH",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"name\": \"Tuan Anzzzh\",\r\n    \"phone\": \"0834161202\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/dummy/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"dummy",
+								"1"
+							]
+						}
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
 		},
 		{
-			"name": "Get All",
-			"protocolProfileBehavior": {
-				"disableBodyPruning": true
-			},
-			"request": {
-				"method": "GET",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+			"name": "Authentication",
+			"item": [
+				{
+					"name": "Register",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"firstName\":\"Boom\",\r\n    \"lastName\": \"Lee\",\r\n    \"username\": \"huynhthanh\",\r\n    \"password\":\"24102016\",\r\n    \"dob\":\"2002-12-16\",\r\n    \"phoneNumber\": \"0834161202\",\r\n    \"email\": \"boomlee2410@gmail.com\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/account/register",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"account",
+								"register"
+							]
+						},
+						"description": "Này để đăng ký một tài khoản mới, hiện tại BE chưa làm xong chỗ validate nên ae không dùng chung username và email. Đăng ký xong sẽ gửi code về email (lúc này FE chuyển qua chỗ nhập code cho user). Nhập code thì đến request Verify Account."
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "{{base_url}}/dummy",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"dummy"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Delete",
-			"request": {
-				"method": "DELETE",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+				{
+					"name": "Verify Account",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"username\": \"huynhthanhdeptrai\",\r\n    \"verificationCode\": \"897599\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/account/verify",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"account",
+								"verify"
+							]
+						},
+						"description": "Khi submit code ở FE gọi API này. Request body thì ae nhìn mẫu"
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "{{base_url}}/dummy/8",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"dummy",
-						"8"
-					]
-				}
-			},
-			"response": []
-		},
-		{
-			"name": "Update",
-			"request": {
-				"method": "PATCH",
-				"header": [],
-				"body": {
-					"mode": "raw",
-					"raw": "{\r\n    \"name\": \"Tuan Anzzzh\",\r\n    \"phone\": \"0834161202\"\r\n}",
-					"options": {
-						"raw": {
-							"language": "json"
-						}
-					}
+				{
+					"name": "request reset password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":  \"boomlee2410@gmail.com\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/account/reset-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"account",
+								"reset-password"
+							]
+						},
+						"description": "Nếu Reset password thì FE bắt nhập email ha (giống FB). Khi đó BE sẽ kiểm tra xem user với có email không để gửi code qua email đó. FE handle để chuyển qua nhập code hay là thông báo chi đó."
+					},
+					"response": []
 				},
-				"url": {
-					"raw": "{{base_url}}/dummy/1",
-					"host": [
-						"{{base_url}}"
-					],
-					"path": [
-						"dummy",
-						"1"
-					]
+				{
+					"name": "reset password/ check code",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":  \"boomlee2410@gmail.com\",\r\n    \"verificationCode\": \"123456\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/account/reset-password/check-code",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"account",
+								"reset-password",
+								"check-code"
+							]
+						},
+						"description": "API ni gọi khi email ok và submit cái code. Nhớ gửi thêm email như body mẫu. Sau đó dựa và status code trả về để handle chuyển tab trên FE. Nếu code xịn thì qua chỗ nhập mkhẩu mới"
+					},
+					"response": []
+				},
+				{
+					"name": "reset password/new password",
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\r\n    \"email\":  \"boomlee2410@gmail.com\",\r\n    \"newPassword\": \"chunickdeptrai\"\r\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/account/reset-password/new-password",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"account",
+								"reset-password",
+								"new-password"
+							]
+						},
+						"description": "Đây là bước cuối cùng khi mà tất cả đều xịn. Nhập mật khẩu mới. Nhớ gửi theo body mẫu nha."
+					},
+					"response": []
 				}
-			},
-			"response": []
+			]
 		}
 	]
 }
