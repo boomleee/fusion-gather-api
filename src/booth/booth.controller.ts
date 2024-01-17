@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Res, UsePipes, ValidationPipe } from '@nestjs/common';
 import { BoothService } from './booth.service';
 import { CreateBoothDto } from './dto/create-booth.dto';
 import { UpdateBoothDto } from './dto/update-booth.dto';
