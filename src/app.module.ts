@@ -7,15 +7,21 @@ import { AccountModule } from './account/account.module';
 import { UserModule } from './user/user.module';
 import { dataSourceOptions } from 'db/data-source';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { BoothModule } from './booth/booth.module';
+import { ConfigModule } from '@nestjs/config';
 import { EventModule } from './event/event.module';
+import { BoothModule } from './booth/booth.module';
 import { QrcodeModule } from './qrcode/qrcode.module';
 import { ImageModule } from './image/image.module';
 import { EventLocationModule } from './event-location/event-location.module';
 import { BoothLocationModule } from './booth-location/booth-location.module';
 
+
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      envFilePath: '.env',
+      isGlobal: true
+    }),
     TypeOrmModule.forRoot(dataSourceOptions),
     MailerModule.forRootAsync({
       useFactory: async () => ({
@@ -36,8 +42,8 @@ import { BoothLocationModule } from './booth-location/booth-location.module';
     DummyModule,
     AccountModule,
     UserModule,
-    BoothModule,
     EventModule,
+    BoothModule,
     QrcodeModule,
     ImageModule,
     EventLocationModule,
@@ -46,4 +52,4 @@ import { BoothLocationModule } from './booth-location/booth-location.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

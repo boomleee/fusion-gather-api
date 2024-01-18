@@ -15,6 +15,8 @@ import { ChangePasswordDto } from 'src/account/dto/change-password.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 
+const EXPIRE_TIME = 10 * 60 * 60 * 1000
+
 @Injectable()
 export class AccountService {
   constructor(
@@ -23,7 +25,7 @@ export class AccountService {
     private readonly userService: UserService,
     private mailerService: MailerService,
     private jwtService: JwtService,
-  ) {}
+  ) { }
 
   //check username exist
   async checkUsernameExist(username: string) {
@@ -198,9 +200,21 @@ export class AccountService {
     return await this.accountRepository.save(existingAccount);
   }
 
-  private async generateToken(payload: { id: number; username: string }) {
-    const access_token = await this.jwtService.signAsync(payload);
-    return access_token;
+  private async generateToken(payload: { id: number }) {
+    const { id } = payload
+
+    const user = await this.userService.findOne(id)
+    const access_token = await this.jwtService.signAsync(payload,);
+    const refresh_token = await this.jwtService.signAsync(
+      payload, { secret: process.env.REFRESH_TOKEN_KEY, expiresIn: "7d" })
+    return {
+      user,
+      tokens: {
+        accessToken: access_token,
+        refreshToken: refresh_token,
+        expriesIn: new Date().setTime(new Date().getTime() + EXPIRE_TIME)
+      }
+    };
   }
 
   async login(loginDto: LoginDto) {
@@ -214,7 +228,11 @@ export class AccountService {
     if (!checkPass) {
       throw new NotFoundException('Password is not correct');
     }
-    const payload = { id: account.id, username: account.username };
+    const payload = { id: account.id };
     return this.generateToken(payload);
+  }
+
+  async refreshToken(id: number) {
+    return this.generateToken({ id })
   }
 }

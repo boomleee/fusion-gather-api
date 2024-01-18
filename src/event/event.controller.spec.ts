@@ -9,6 +9,7 @@ describe('EventController', () => {
     const module: TestingModule = await Test.createTestingModule({
       controllers: [EventController],
       providers: [EventService],
+
     }).compile();
 
     controller = module.get<EventController>(EventController);
