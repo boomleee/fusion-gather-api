@@ -5,5 +5,6 @@ import { EventService } from './event.service';
 @Module({
   controllers: [EventController],
   providers: [EventService]
+
 })
 export class EventModule {}

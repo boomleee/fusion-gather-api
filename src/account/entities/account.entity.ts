@@ -15,7 +15,7 @@ export class Account {
   @OneToOne(() => User)
   @JoinColumn({ name: 'userId' })
   user: User;
-
+  
   @Column()
   username: string;
 

@@ -9,6 +9,12 @@ import { dataSourceOptions } from 'db/data-source';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule } from '@nestjs/config';
 import { EventModule } from './event/event.module';
+import { BoothModule } from './booth/booth.module';
+import { QrcodeModule } from './qrcode/qrcode.module';
+import { ImageModule } from './image/image.module';
+import { EventLocationModule } from './event-location/event-location.module';
+import { BoothLocationModule } from './booth-location/booth-location.module';
+
 
 @Module({
   imports: [
@@ -37,6 +43,11 @@ import { EventModule } from './event/event.module';
     AccountModule,
     UserModule,
     EventModule,
+    BoothModule,
+    QrcodeModule,
+    ImageModule,
+    EventLocationModule,
+    BoothLocationModule,
   ],
   controllers: [AppController],
   providers: [AppService],

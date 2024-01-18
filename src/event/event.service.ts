@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
+import { CreateEventDto } from './dto/create-event.dto';
+import { UpdateEventDto } from './dto/update-event.dto';
 @Injectable()
 export class EventService {
     constructor(
@@ -9,7 +10,7 @@ export class EventService {
         private readonly eventRepository: Repository<Event>,
     ) { }
 
-    create() {
+    create(createEventDto: CreateEventDto) {
         return
     }
 
@@ -21,11 +22,12 @@ export class EventService {
         return
     }
 
-    update() {
+    update(id: number, updateEventDto: UpdateEventDto) {
         return
     }
 
-    delete() {
+    delete(id: number) {
         return
     }
+
 }

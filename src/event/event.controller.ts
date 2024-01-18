@@ -32,4 +32,5 @@ export class EventController {
     delete(@Param('id') id: string) {
         return this.eventService.delete()
     }
+
 }
