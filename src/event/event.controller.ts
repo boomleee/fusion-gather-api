@@ -5,15 +5,15 @@ import { EventService } from './event.service';
 export class EventController {
     constructor(private readonly eventService: EventService) { }
 
-    @Post('')
-    create() {
-        return this.eventService.create()
-    }
+    // @Post('')
+    // create() {
+    //     return this.eventService.create()
+    // }
 
-    @Get(':id')
-    getEvent(@Param('id') id: string) {
-        return this.eventService.getEvent()
-    }
+    // @Get(':id')
+    // getEvent(@Param('id') id: string) {
+    //     return this.eventService.getEvent()
+    // }
 
     @Get()
     getAllEvents(
@@ -23,14 +23,14 @@ export class EventController {
         return this.eventService.getAllEvents()
     }
 
-    @Patch(':id')
-    update(@Param('id') id: string) {
-        return this.eventService.update()
-    }
+    // @Patch(':id')
+    // update(@Param('id') id: string) {
+    //     return this.eventService.update()
+    // }
 
-    @Delete(':id')
-    delete(@Param('id') id: string) {
-        return this.eventService.delete()
-    }
+    // @Delete(':id')
+    // delete(@Param('id') id: string) {
+    //     return this.eventService.delete()
+    // }
 
 }

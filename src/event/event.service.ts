@@ -11,7 +11,7 @@ export class EventService {
     ) { }
 
     create(createEventDto: CreateEventDto) {
-        return
+        return 'This action adds a new event';
     }
 
     getEvent() {
@@ -26,8 +26,8 @@ export class EventService {
         return
     }
 
-    delete(id: number) {
-        return
-    }
+    // delete(id: number) {
+    //     return
+    // }
 
 }
