@@ -1,16 +1,21 @@
 /* eslint-disable prettier/prettier */
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from 'src/user/entities/user.entity';
+import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity({ name: 'event' })
 export class Event {
   @PrimaryGeneratedColumn()
   id: number;
 
-  @Column()
+  @Column('text')
   title: string;
 
-  @Column()
+  @Column('text')
   description: string;
+
+  @ManyToOne(() => User)
+  @JoinColumn({ name: "userId" })
+  author: User;
 
   @Column()
   location: string;
@@ -24,7 +29,19 @@ export class Event {
   @Column()
   endDateTime: string;
 
-
   @Column()
   price: string;
+
+  @Column()
+  lng: number;
+
+  @Column()
+  lat: number;
+
+  @Column()
+  isFree: boolean;
+
+  // @Column()
+  // @JoinColumn({ name: 'categoryId' })
+  // categoryId: Category;
 }

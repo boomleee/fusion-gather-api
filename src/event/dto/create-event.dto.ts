@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { IsNotEmpty, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateEventDto {
   @IsNotEmpty()
@@ -29,4 +29,19 @@ export class CreateEventDto {
   @IsNotEmpty()
   @IsString()
   price: string;
+
+  @IsBoolean()
+  isFree: boolean
+
+  @IsNotEmpty()
+  @IsNumber()
+  lng: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  lat: number
+
+  // @IsNotEmpty()
+  // @IsString()
+  // categoryId: string
 }

@@ -5,13 +5,14 @@ import { UpdateEventDto } from './dto/update-event.dto'; // Đảm bảo sửa t
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity'; // Đảm bảo sửa tên Entity nếu có
 import { Repository } from 'typeorm';
+import { User } from 'src/user/entities/user.entity';
 
 @Injectable()
 export class EventService {
   constructor(
     @InjectRepository(Event)
     private readonly eventRepository: Repository<Event>,
-  ) {}
+  ) { }
 
   //check event exist
   async checkEventTitleExist(title: string) {
@@ -22,22 +23,43 @@ export class EventService {
     else return false;
   }
 
-  async create(createEventDto: CreateEventDto) {
+  async create(createEventDto: CreateEventDto, user: User) {
     const isEventTitleExist = await this.checkEventTitleExist(
       createEventDto.title,
     );
 
     if (isEventTitleExist) {
-      throw new NotFoundException(`Event ${createEventDto.title} exist`);
+      throw new NotFoundException(`Title is exist!`);
     }
 
     const event = this.eventRepository.create(createEventDto);
+    event.author = user;
 
     return await this.eventRepository.save(event);
   }
 
-  async findAll(): Promise<Event[]> {
-    return await this.eventRepository.find();
+  async findAll({ userId, searchString, category, pageNumber, pageSize }): Promise<Event[]> {
+    const query = this.eventRepository.createQueryBuilder('event');
+
+    // filter by user
+    if (userId) {
+      query.andWhere('event.author = :userId', { userId: userId });
+    }
+
+    // filter by searchString
+    if (searchString) {
+      query.andWhere('(event.title LIKE :searchString OR event.description LIKE :searchString)', { searchString: `%${searchString}%` });
+    }
+
+    // filter by category
+    if (category) {
+      query.andWhere('event.categoryId = :category', { categoryId: category });
+    }
+
+    // pagination
+    query.skip((pageNumber - 1) * pageSize).take(pageSize);
+
+    return query.getMany();
   }
 
   async findOne(id: number): Promise<Event> {

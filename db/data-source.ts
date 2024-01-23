@@ -5,7 +5,7 @@ export const dataSourceOptions: DataSourceOptions = {
   host: 'localhost',
   port: 3306,
   username: 'root',
-  password: '123456',
+  password: 'trantnhatvy2',
   database: 'fusiongather',
   entities: ['dist/**/*.entity{.ts,.js}'],
   migrations: ['dist/db/migrations/*.js'],

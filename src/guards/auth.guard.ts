@@ -5,22 +5,19 @@ import { Account } from "src/account/entities/account.entity";
 import { UserService } from "src/user/user.service";
 import { Repository } from "typeorm";
 
-
 @Injectable()
-export class RefreshGuard implements CanActivate {
+export class AuthGuard implements CanActivate {
     constructor(
         private readonly jwtService: JwtService,
         private readonly userService: UserService,
-        @InjectRepository(Account)
-        private readonly accountRepository: Repository<Account>
     ) { }
-
     async canActivate(context: ExecutionContext): Promise<boolean> {
         try {
             const request = context?.switchToHttp()?.getRequest()
             const token = this.extractTokenFromHeader(request)
+
             if (token) {
-                const payload = await this.jwtService.verify(token, { secret: process.env.REFRESH_TOKEN_KEY })
+                const payload = await this.jwtService.verify(token, { secret: process.env.ACCESS_TOKEN_KEY })
                 const user = await this.userService.findOne(payload?.id)
                 if (!user) throw new HttpException('Unauthorized!', 400)
                 request['user'] = user
