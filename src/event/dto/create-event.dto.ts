@@ -11,6 +11,14 @@ export class CreateEventDto {
   description: string;
 
   @IsNotEmpty()
+  @IsNumber()
+  categoryId: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number;
+
+  @IsNotEmpty()
   @IsString()
   location: string;
 
@@ -40,8 +48,4 @@ export class CreateEventDto {
   @IsNotEmpty()
   @IsNumber()
   lat: number
-
-  // @IsNotEmpty()
-  // @IsString()
-  // categoryId: string
 }

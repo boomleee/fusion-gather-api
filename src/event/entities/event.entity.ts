@@ -1,6 +1,13 @@
 /* eslint-disable prettier/prettier */
+import { Category } from 'src/category/entities/category.entity';
 import { User } from 'src/user/entities/user.entity';
-import { Column, Entity, JoinColumn, ManyToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity({ name: 'event' })
 export class Event {
@@ -14,8 +21,12 @@ export class Event {
   description: string;
 
   @ManyToOne(() => User)
-  @JoinColumn({ name: "userId" })
+  @JoinColumn({ name: 'userId' })
   author: User;
+
+  @ManyToOne(() => Category)
+  @JoinColumn({ name: 'categoryId' })
+  category: Category;
 
   @Column()
   location: string;
@@ -32,16 +43,12 @@ export class Event {
   @Column()
   price: string;
 
-  @Column()
+  @Column('decimal', { precision: 17, scale: 14 })
+  lat: number;
+
+  @Column('decimal', { precision: 17, scale: 14 })
   lng: number;
 
   @Column()
-  lat: number;
-
-  @Column()
   isFree: boolean;
-
-  // @Column()
-  // @JoinColumn({ name: 'categoryId' })
-  // categoryId: Category;
 }
