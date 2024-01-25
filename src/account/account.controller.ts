@@ -52,6 +52,12 @@ export class AccountController {
     return this.accountService.update(+id, updateAccountDto);
   }
 
+  @Patch('/ban/:id')
+  @UsePipes(ValidationPipe)
+  disableAccount(@Param('id') id: string) {
+    return this.accountService.disableAccount(+id);
+  }
+
   @Post('/reset-password/new-password')
   @UsePipes(ValidationPipe)
   changePassword(@Body() changePasswordDto: ChangePasswordDto) {
