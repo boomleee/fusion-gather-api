@@ -30,6 +30,12 @@ export class Booth {
     @JoinColumn({ name: 'qrcodeId' })
     qrcodeId: Qrcode;
 
+    @Column('decimal', { precision: 17, scale: 14})
+    latitude: number;
+
+    @Column('decimal', { precision: 17, scale: 14})
+    longitude: number;
+
     @Column()
     name: string;
 
