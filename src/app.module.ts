@@ -12,8 +12,6 @@ import { EventModule } from './event/event.module';
 import { BoothModule } from './booth/booth.module';
 import { QrcodeModule } from './qrcode/qrcode.module';
 import { ImageModule } from './image/image.module';
-import { EventLocationModule } from './event-location/event-location.module';
-import { BoothLocationModule } from './booth-location/booth-location.module';
 
 
 @Module({
@@ -46,8 +44,6 @@ import { BoothLocationModule } from './booth-location/booth-location.module';
     BoothModule,
     QrcodeModule,
     ImageModule,
-    EventLocationModule,
-    BoothLocationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
