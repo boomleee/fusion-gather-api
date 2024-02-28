@@ -10,6 +10,7 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule } from '@nestjs/config';
 import { EventModule } from './event/event.module';
 import { CategoryModule } from './category/category.module';
+import { TicketModule } from './ticket/ticket.module';
 
 @Module({
   imports: [
@@ -39,6 +40,7 @@ import { CategoryModule } from './category/category.module';
     UserModule,
     EventModule,
     CategoryModule,
+    TicketModule,
   ],
   controllers: [AppController],
   providers: [AppService],
