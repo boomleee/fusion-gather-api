@@ -22,6 +22,16 @@ export class BoothController {
     return this.boothService.findOne(+id);
   }
 
+  @Get('event/:id')
+  findByEventId(@Param('id') id: string) {
+    return this.boothService.findBoothsByEventId(+id);
+  }
+
+  @Get('user/:id')
+  findByVendorId(@Param('id') id: string) {
+    return this.boothService.findBoothsByVendorId(+id);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateBoothDto: UpdateBoothDto) {
     return this.boothService.update(+id, updateBoothDto);

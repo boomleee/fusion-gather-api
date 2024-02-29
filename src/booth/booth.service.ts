@@ -99,6 +99,32 @@ export class BoothService {
     return existingBooth;
   }
 
+  async findBoothsByEventId(eventId: number): Promise<Booth[]> {
+    const booth = await this.boothRepository.createQueryBuilder('booth')
+      .innerJoinAndSelect('booth.eventId', 'event')
+      .innerJoinAndSelect('booth.vendorId', 'user')
+      .where('booth.eventId = :eventId', { eventId })
+      .getMany();
+    if (booth.length === 0) {
+      throw new NotFoundException(`No booth found for event with ID ${eventId}`);
+    }
+
+    return booth;
+  }
+
+  async findBoothsByVendorId(vendorId: number): Promise<Booth[]> {
+    const booth = await this.boothRepository.createQueryBuilder('booth')
+      .innerJoinAndSelect('booth.eventId', 'event')
+      .innerJoinAndSelect('booth.vendorId', 'user')
+      .where('booth.vendorId = :vendorId', { vendorId })
+      .getMany();
+    if (booth.length === 0) {
+      throw new NotFoundException(`No booth found for vendor with ID ${vendorId}`);
+    }
+
+    return booth;
+  }
+
   async update(id: number, updateBoothDto: UpdateBoothDto): Promise<Booth> {
     const existingBooth = await this.boothRepository.findOne({ where: { id } });
 
