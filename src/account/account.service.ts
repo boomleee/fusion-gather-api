@@ -148,6 +148,7 @@ export class AccountService {
     }
 
     await this.accountRepository.remove(accountToRemove);
+
     await this.userService.remove(id);
     console.log(`Account with ID ${id} has been removed`);
   }

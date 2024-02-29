@@ -1,11 +1,52 @@
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+/* eslint-disable prettier/prettier */
+import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class CreateEventDto {
-    @IsNotEmpty()
-    @IsString()
-    name: string;
-    
-    @IsNotEmpty()
-    @IsString()
-    description: string;
+  @IsNotEmpty()
+  @IsString()
+  title: string;
+
+  @IsNotEmpty()
+  @IsString()
+  description: string;
+
+  @IsNotEmpty()
+  @IsNumber()
+  categoryId: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  userId: number;
+
+  @IsNotEmpty()
+  @IsString()
+  location: string;
+
+  @IsNotEmpty()
+  @IsString()
+  imageUrl: string;
+
+  @IsNotEmpty()
+  @IsString()
+  startDateTime: string;
+
+  @IsNotEmpty()
+  @IsString()
+  endDateTime: string;
+
+  @IsNotEmpty()
+  @IsString()
+  price: string;
+
+  @IsBoolean()
+  isFree: boolean
+
+  @IsNotEmpty()
+  @IsNumber()
+  lng: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  lat: number
+
 }

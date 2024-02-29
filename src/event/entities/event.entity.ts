@@ -1,44 +1,55 @@
-import {
-    Column,
-    Entity,
-    JoinColumn,
-    OneToOne,
-    PrimaryGeneratedColumn,
-  } from 'typeorm';
+
+/* eslint-disable prettier/prettier */
+import { Category } from 'src/category/entities/category.entity';
 import { User } from 'src/user/entities/user.entity';
-import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity({ name: 'event' })
 export class Event {
-    @PrimaryGeneratedColumn()
-    id: number;
-    
-    @Column()
-    name: string;
+  @PrimaryGeneratedColumn()
+  id: number;
 
-    @Column()
-    date: Date;
+  @Column('text')
+  title: string;
 
-    @OneToOne(() => User)
-    @JoinColumn({ name: 'userId' })
-    organizerId: User;
+  @Column('text')
+  description: string;
 
-    @OneToOne(() => Qrcode)
-    @JoinColumn({ name: 'qrcodeId' })
-    qrcodeId: Qrcode;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'userId' })
+  author: User;
 
-    @Column()
-    capacity: number;
+  @ManyToOne(() => Category)
+  @JoinColumn({ name: 'categoryId' })
+  category: Category;
 
-    @Column()
-    ticketPrice: number;
+  @Column()
+  location: string;
 
-    @Column()
-    isFree: boolean;
+  @Column()
+  imageUrl: string;
 
-    @Column()
-    status: boolean;
+  @Column()
+  startDateTime: string;
 
-    @Column()
-    description: string;
+  @Column()
+  endDateTime: string;
+
+  @Column()
+  price: string;
+
+  @Column('decimal', { precision: 17, scale: 14 })
+  lat: number;
+
+  @Column('decimal', { precision: 17, scale: 14 })
+  lng: number;
+
+  @Column()
+  isFree: boolean;
 }

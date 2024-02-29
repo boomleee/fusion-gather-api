@@ -1,15 +1,51 @@
+
+/* eslint-disable prettier/prettier */
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateEventDto } from './create-event.dto';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class UpdateEventDto extends PartialType(CreateEventDto) {
-    @IsNotEmpty()
-    @IsString()
-    @IsOptional()
-    name: string;
+  @IsNotEmpty()
+  @IsString()
+  title: string;
 
-    @IsNotEmpty()
-    @IsString()
-    @IsOptional()
-    description: string;
+  @IsNotEmpty()
+  @IsString()
+  description: string;
+
+  @IsNotEmpty()
+  @IsString()
+  location: string;
+
+  @IsNotEmpty()
+  @IsString()
+  imageUrl: string;
+
+  @IsNotEmpty()
+  @IsString()
+  startDateTime: string;
+
+  @IsNotEmpty()
+  @IsString()
+  endDateTime: string;
+
+  @IsNotEmpty()
+  @IsString()
+  price: string;
+
+  @IsBoolean()
+  isFree: boolean
+
+  @IsNotEmpty()
+  @IsNumber()
+  lng: number
+
+  @IsNotEmpty()
+  @IsNumber()
+  lat: number
+
+  // @IsNotEmpty()
+  // @IsString()
+  // categoryId: string
+
 }
