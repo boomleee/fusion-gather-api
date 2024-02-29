@@ -1,3 +1,4 @@
+
 /* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { EventService } from './event.service';
@@ -17,5 +18,6 @@ import { CategoryService } from 'src/category/category.service';
   ],
   controllers: [EventController],
   providers: [EventService, UserService],
+
 })
 export class EventModule {}

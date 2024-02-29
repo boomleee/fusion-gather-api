@@ -11,12 +11,15 @@ import { ConfigModule } from '@nestjs/config';
 import { EventModule } from './event/event.module';
 import { CategoryModule } from './category/category.module';
 import { TicketModule } from './ticket/ticket.module';
+import { BoothModule } from './booth/booth.module';
+import { QrcodeModule } from './qrcode/qrcode.module';
+import { ImageModule } from './image/image.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: '.env',
-      isGlobal: true,
+      isGlobal: true
     }),
     TypeOrmModule.forRoot(dataSourceOptions),
     MailerModule.forRootAsync({
@@ -41,8 +44,11 @@ import { TicketModule } from './ticket/ticket.module';
     EventModule,
     CategoryModule,
     TicketModule,
+    BoothModule,
+    QrcodeModule,
+    ImageModule,
   ],
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule {}
+export class AppModule { }

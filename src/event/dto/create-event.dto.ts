@@ -48,4 +48,5 @@ export class CreateEventDto {
   @IsNotEmpty()
   @IsNumber()
   lat: number
+
 }

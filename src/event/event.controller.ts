@@ -1,3 +1,4 @@
+
 /* eslint-disable prettier/prettier */
 import {
   Controller,
@@ -55,4 +56,5 @@ export class EventController {
   remove(@Param('id') id: string) {
     return this.eventService.remove(+id);
   }
+
 }
