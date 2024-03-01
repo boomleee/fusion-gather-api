@@ -8,7 +8,7 @@ import { User } from 'src/user/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { MailerService } from '@nestjs-modules/mailer';
+import { MailerService } from '@nestjs-modules/mailer'
 import { VerifyAccountDto } from './dto/verify-account.dto';
 import { ResetRequestDto } from './dto/reset-request.dto';
 import { ResetPasswordCodeDto } from './dto/reset-password-code.dto';
