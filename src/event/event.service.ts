@@ -73,6 +73,13 @@ export class EventService {
     return existingEvent;
   }
 
+  async findIsFreeEvent(): Promise<Event[]> { 
+    const query = this.eventRepository.createQueryBuilder('event');
+    query.andWhere('event.isFree = :isFree', { isFree: true });
+    return query.getMany();
+
+  }
+
   async update(id: number, updateEventDto: UpdateEventDto): Promise<Event> {
     const existingEvent = await this.eventRepository.findOne({ where: { id } });
 

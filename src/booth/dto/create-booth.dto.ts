@@ -8,8 +8,8 @@ export class CreateBoothDto {
     @IsNotEmpty()
     eventId: number;
 
-    @IsNotEmpty()
-    qrcodeId: number;
+    // @IsNotEmpty()
+    // qrcodeId: number;
 
     @IsNotEmpty()
     @IsString()
@@ -18,5 +18,11 @@ export class CreateBoothDto {
     @IsNotEmpty()
     @IsString()
     description: string;
+
+    @IsNotEmpty()
+    latitude: number;
+
+    @IsNotEmpty()
+    longitude: number;
    
 }
