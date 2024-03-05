@@ -3,6 +3,11 @@
 /node_modules
 /.vscode
 
+
+# package
+package-lock.json
+
+
 # Logs
 logs
 *.log
