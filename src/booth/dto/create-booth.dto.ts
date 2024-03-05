@@ -8,9 +8,6 @@ export class CreateBoothDto {
     @IsNotEmpty()
     eventId: number;
 
-    // @IsNotEmpty()
-    // qrcodeId: number;
-
     @IsNotEmpty()
     @IsString()
     name: string;
