@@ -31,6 +31,11 @@ export class EventController {
     return this.eventService.create(createEventDto, user);
   }
 
+  @Get('/pending')
+  findPendingEvents() {
+    return this.eventService.findIsFreeEvent();
+  }
+
   @Get()
   findAll(
     @Query('searchString') searchString: string = "",

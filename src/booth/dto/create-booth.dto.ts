@@ -9,14 +9,17 @@ export class CreateBoothDto {
     eventId: number;
 
     @IsNotEmpty()
-    qrcodeId: number;
-
-    @IsNotEmpty()
     @IsString()
     name: string;
 
     @IsNotEmpty()
     @IsString()
     description: string;
+
+    @IsNotEmpty()
+    latitude: number;
+
+    @IsNotEmpty()
+    longitude: number;
    
 }

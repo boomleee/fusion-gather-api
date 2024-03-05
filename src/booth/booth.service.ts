@@ -50,13 +50,10 @@ export class BoothService {
     const user = await this.userRepository.findOne({
       where: { id: createBoothDto.vendorId },
     });
-    const qrcode = await this.qrcodeRepository.findOne({
-      where: { id: createBoothDto.qrcodeId },
-    });
+
 
     const isEventExist = await this.checkEventExist(createBoothDto.eventId);
     const isUserExist = await this.checkUserExist(createBoothDto.vendorId);
-    const isQRCodeExist = await this.checkQRCodeExist(createBoothDto.qrcodeId);
 
     if (!isEventExist) {
       throw new NotFoundException(`Event ${createBoothDto.eventId} not exist`);
@@ -66,15 +63,11 @@ export class BoothService {
       throw new NotFoundException(`User ${createBoothDto.vendorId} not exist`);
     }
 
-    if (!isQRCodeExist) {
-      throw new NotFoundException(`QRCode ${createBoothDto.qrcodeId} not exist`);
-    }
     try {
     const booth = this.boothRepository.create({
       ...createBoothDto,
       eventId: event,
-      vendorId: user,
-      qrcodeId: qrcode,
+      vendorId: user
     });
     
 
