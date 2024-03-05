@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, ForbiddenException, UsePipes, ValidationPipe } from '@nestjs/common';
 import { TicketService } from './ticket.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
@@ -18,9 +18,10 @@ export class TicketController {
     return this.ticketService.findAll();
   }
 
-  @Get('event/:id')
-  findOne(@Param('id') eventId: string) {
-    return this.ticketService.findTicketByEventId(+eventId);
+  @Get('event/:eventId/:userId')
+  @UsePipes(ValidationPipe)
+  findOne(@Param('eventId') eventId: string, @Param('userId') userId: string) {
+    return this.ticketService.findTicketByEventId(+eventId, +userId);
   }
 
   @Patch(':id')
