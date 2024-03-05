@@ -14,7 +14,7 @@ export class BoothService {
   constructor(
     @InjectRepository(Booth) private readonly boothRepository: Repository<Booth>,
     @InjectRepository(Event) private readonly eventRepository: Repository<Event>,
-    // @InjectRepository(Qrcode) private readonly qrcodeRepository: Repository<Qrcode>,
+    @InjectRepository(Qrcode) private readonly qrcodeRepository: Repository<Qrcode>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {}
 
@@ -34,13 +34,13 @@ export class BoothService {
     else return false;
   }
 
-  // async checkQRCodeExist(qrcodeId: number){
-  //   const qrcode = await this.qrcodeRepository.findOne({
-  //     where: { id: qrcodeId },
-  //   });
-  //   if (qrcode) return true;
-  //   else return false;
-  // }
+  async checkQRCodeExist(qrcodeId: number){
+    const qrcode = await this.qrcodeRepository.findOne({
+      where: { id: qrcodeId },
+    });
+    if (qrcode) return true;
+    else return false;
+  }
 
   async create(createBoothDto: CreateBoothDto) {
     
@@ -50,13 +50,10 @@ export class BoothService {
     const user = await this.userRepository.findOne({
       where: { id: createBoothDto.vendorId },
     });
-    // const qrcode = await this.qrcodeRepository.findOne({
-    //   where: { id: createBoothDto.qrcodeId },
-    // });
+
 
     const isEventExist = await this.checkEventExist(createBoothDto.eventId);
     const isUserExist = await this.checkUserExist(createBoothDto.vendorId);
-    // const isQRCodeExist = await this.checkQRCodeExist(createBoothDto.qrcodeId);
 
     if (!isEventExist) {
       throw new NotFoundException(`Event ${createBoothDto.eventId} not exist`);
@@ -66,9 +63,6 @@ export class BoothService {
       throw new NotFoundException(`User ${createBoothDto.vendorId} not exist`);
     }
 
-    // if (!isQRCodeExist) {
-    //   throw new NotFoundException(`QRCode ${createBoothDto.qrcodeId} not exist`);
-    // }
     try {
     const booth = this.boothRepository.create({
       ...createBoothDto,

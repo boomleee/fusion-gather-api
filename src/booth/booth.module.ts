@@ -10,7 +10,7 @@ import { Event } from 'src/event/entities/event.entity';
   imports: [
     TypeOrmModule.forFeature([Booth]),
     TypeOrmModule.forFeature([Event]),
-    // TypeOrmModule.forFeature([Qrcode]),
+    TypeOrmModule.forFeature([Qrcode]),
     TypeOrmModule.forFeature([User]),
   ],
   controllers: [BoothController],
