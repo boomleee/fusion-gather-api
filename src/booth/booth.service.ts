@@ -83,12 +83,15 @@ export class BoothService {
   }
 
   async findOne(id: number): Promise<Booth> {
-    const existingBooth = await this.boothRepository.findOne({ where: { id } });
+    const existingBooth = await this.boothRepository.createQueryBuilder('booth')
+      .innerJoinAndSelect('booth.eventId', 'event')
+      .innerJoinAndSelect('booth.vendorId', 'user')
+      .where('booth.id = :id', { id })
+      .getOne();
 
     if (!existingBooth) {
       throw new NotFoundException(`Booth with ID ${id} not found`);
     }
-
     return existingBooth;
   }
 
