@@ -32,13 +32,13 @@ export class BoothController {
     return this.boothService.findBoothsByVendorId(+id);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateBoothDto: UpdateBoothDto) {
-    return this.boothService.update(+id, updateBoothDto);
+  @Patch(':userId/:boothId')
+  update(@Param('userId') userId: string, @Param('boothId') boothId: string, @Body() updateBoothDto: UpdateBoothDto) {
+    return this.boothService.update(+userId, +boothId, updateBoothDto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.boothService.remove(+id);
+  @Delete(':userId/:boothId')
+  remove(@Param('userId') userId: string, @Param('boothId') boothId: string) {
+    return this.boothService.remove(+userId, +boothId);
   }
 }
