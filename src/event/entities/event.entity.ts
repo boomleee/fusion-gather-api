@@ -56,4 +56,7 @@ export class Event {
 
   @Column()
   isFree: boolean;
+
+  @Column({ default: false })
+  isPublished: boolean;
 }

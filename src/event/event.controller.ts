@@ -33,7 +33,7 @@ export class EventController {
 
   @Get('/pending')
   findPendingEvents() {
-    return this.eventService.findIsFreeEvent();
+    return this.eventService.findPendingEvent();
   }
 
   @Get()
