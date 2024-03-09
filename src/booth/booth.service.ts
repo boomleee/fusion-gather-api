@@ -1,4 +1,4 @@
-import { ConflictException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateBoothDto } from './dto/create-booth.dto';
 import { UpdateBoothDto } from './dto/update-booth.dto';
 import { In, Repository } from 'typeorm';
@@ -31,6 +31,14 @@ export class BoothService {
       where: { id: vendorId },
     });
     if (user) return true;
+    else return false;
+  }
+
+  async checkBoothExist(boothId: number){
+    const booth = await this.boothRepository.findOne({
+      where: { id: boothId },
+    });
+    if (booth) return true;
     else return false;
   }
 
@@ -83,12 +91,15 @@ export class BoothService {
   }
 
   async findOne(id: number): Promise<Booth> {
-    const existingBooth = await this.boothRepository.findOne({ where: { id } });
+    const existingBooth = await this.boothRepository.createQueryBuilder('booth')
+      .innerJoinAndSelect('booth.eventId', 'event')
+      .innerJoinAndSelect('booth.vendorId', 'user')
+      .where('booth.id = :id', { id })
+      .getOne();
 
     if (!existingBooth) {
       throw new NotFoundException(`Booth with ID ${id} not found`);
     }
-
     return existingBooth;
   }
 
@@ -118,24 +129,66 @@ export class BoothService {
     return booth;
   }
 
-  async update(id: number, updateBoothDto: UpdateBoothDto): Promise<Booth> {
-    const existingBooth = await this.boothRepository.findOne({ where: { id } });
+  async checkBoothAuthor(boothId: number, userId: number) {
+    const booth = await this.boothRepository.createQueryBuilder('booth')
+      .andWhere('booth.id = :boothId', { boothId })
+      .andWhere('booth.vendorId = :userId', { userId })
+      .getOne();
+    if (booth) {
+      return true;
+    }
+    return false;
+  }
+
+  async update(userId: number,boothId: number, updateBoothDto: UpdateBoothDto): Promise<Booth> {
+    const isUserExist = await this.checkUserExist(userId);
+    const isBoothExist = await this.checkBoothExist(boothId);
+
+    if (!isUserExist) {
+      throw new NotFoundException(`User ${userId} not exist`);
+    }
+
+    if (!isBoothExist) {
+      throw new NotFoundException(`Booth ${boothId} not exist`);
+    }
+
+    const isBoothAuthor = await this.checkBoothAuthor(boothId, userId);
+    if (!isBoothAuthor) {
+      throw new ForbiddenException('You dont have permission to modify this booth');
+    }
+    const existingBooth = await this.boothRepository.findOne({ where: { id: boothId } })
 
     if (!existingBooth) {
-      throw new NotFoundException(`Booth with ID ${id} not found`);
+      throw new NotFoundException(`Booth with ID ${boothId} not found`);
     }
     Object.assign(existingBooth, updateBoothDto);
     return await this.boothRepository.save(existingBooth);
   }
 
-  async remove(id: number): Promise<void> {
-    const boothToRemove = await this.boothRepository.findOne({ where: { id } });
+  async remove(userId: number, boothId: number): Promise<void> {
+    const isUserExist = await this.checkUserExist(userId);
+    const isBoothExist = await this.checkBoothExist(boothId);
+
+    if (!isUserExist) {
+      throw new NotFoundException(`User ${userId} not exist`);
+    }
+
+    if (!isBoothExist) {
+      throw new NotFoundException(`Booth ${boothId} not exist`);
+    }
+    const isBoothAuthor = await this.checkBoothAuthor(boothId, userId);
+    if (!isBoothAuthor) {
+      throw new ForbiddenException('You dont have permission to delete this booth');
+    }
+    const boothToRemove = await this.boothRepository.createQueryBuilder('booth')
+      .where('booth.id = :boothId', { boothId })
+      .getOne();
 
     if (!boothToRemove) {
-      throw new NotFoundException(`Booth with ID ${id} not found`);
+      throw new NotFoundException(`Booth with ID ${boothId} not found`);
     }
 
     await this.boothRepository.remove(boothToRemove);
-    console.log(`Booth with ID ${id} has been deleted successfully.`);
+    console.log(`Booth with ID ${boothId} has been deleted successfully.`);
   }
 }

@@ -1,10 +1,10 @@
 
 /* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateEventDto } from './dto/create-event.dto'; // Đảm bảo sửa tên DTO nếu có
-import { UpdateEventDto } from './dto/update-event.dto'; // Đảm bảo sửa tên DTO nếu có
+import { CreateEventDto } from './dto/create-event.dto'; 
+import { UpdateEventDto } from './dto/update-event.dto'; 
 import { InjectRepository } from '@nestjs/typeorm';
-import { Event } from './entities/event.entity'; // Đảm bảo sửa tên Entity nếu có
+import { Event } from './entities/event.entity'; 
 import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 
@@ -73,11 +73,10 @@ export class EventService {
     return existingEvent;
   }
 
-  async findIsFreeEvent(): Promise<Event[]> { 
+  async findPendingEvent(): Promise<Event[]> { 
     const query = this.eventRepository.createQueryBuilder('event');
-    query.andWhere('event.isFree = :isFree', { isFree: true });
+    query.andWhere('event.isPublished = :isPublished', { isPublished: false });
     return query.getMany();
-
   }
 
   async update(id: number, updateEventDto: UpdateEventDto): Promise<Event> {

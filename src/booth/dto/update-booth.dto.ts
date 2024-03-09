@@ -1,6 +1,6 @@
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateBoothDto } from './create-booth.dto';
-import { IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import { IsNotEmpty, IsNumber, IsOptional, IsString } from 'class-validator';
 
 export class UpdateBoothDto extends PartialType(CreateBoothDto) {
     @IsNotEmpty()
@@ -10,4 +10,16 @@ export class UpdateBoothDto extends PartialType(CreateBoothDto) {
     @IsNotEmpty()
     @IsString()
     description: string;
+
+    @IsNotEmpty()
+    @IsNumber()
+    latitude: number;
+
+    @IsNotEmpty()
+    @IsNumber()
+    longitude: number;
+
+    @IsOptional()
+    @IsNumber()
+    vendorId?: number;
 }
