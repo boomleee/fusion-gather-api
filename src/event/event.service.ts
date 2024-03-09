@@ -64,12 +64,16 @@ export class EventService {
   }
 
   async findOne(id: number): Promise<Event> {
-    const existingEvent = await this.eventRepository.findOne({ where: { id } });
-
+    const existingEvent = await this.eventRepository.findOne(
+      { 
+        relations: {
+          author: true,
+        },
+        where: { id } }
+      );
     if (!existingEvent) {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
-
     return existingEvent;
   }
 
