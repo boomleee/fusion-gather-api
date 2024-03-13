@@ -83,6 +83,16 @@ export class EventService {
     return query.getMany();
   }
 
+  async findLatestEvent(): Promise<Event[]> {
+    const query = this.eventRepository.createQueryBuilder('event')
+    .innerJoinAndSelect('event.author', 'user')
+    .andWhere('event.isPublished = :isPublished', { isPublished: true })
+    .andWhere('event.startDateTime > :currentDate', { currentDate: new Date() })
+    .addOrderBy('event.startDateTime', 'ASC')
+    .take(3);
+    return query.getMany();
+  }
+
   async update(id: number, updateEventDto: UpdateEventDto): Promise<Event> {
     const existingEvent = await this.eventRepository.findOne({ where: { id } });
 

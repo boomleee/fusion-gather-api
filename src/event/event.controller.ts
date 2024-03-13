@@ -36,6 +36,11 @@ export class EventController {
     return this.eventService.findPendingEvent();
   }
 
+  @Get("/latest")
+  findLatestEvent() {
+    return this.eventService.findLatestEvent();
+  }
+
   @Get()
   findAll(
     @Query('searchString') searchString: string = "",
