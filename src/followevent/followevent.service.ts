@@ -49,21 +49,24 @@ export class FolloweventService {
 
     if (!isUserExist) {
       throw new NotFoundException(`User does not exist!`);
+    } 
+
+    const followevent = await this.followeventRepository.create({
+      userId: user.id,
+      eventId: event.id,    
+    });
+
+    const isUserFollowEvent = await this.checkisUserFollowEvent(createFolloweventDto.userId, createFolloweventDto.eventId);
+
+    if (isUserFollowEvent) {
+      throw new NotFoundException(`User already follow event!`);
     }
 
-    try 
-    {
-      const followevent = this.followeventRepository.create({
-        ...createFolloweventDto,
-        eventId: event,
-        userId: user,
-      });
+    if (!followevent) {
+      throw new NotFoundException(`Unable to follow event!`);
+    }
+      
       return await this.followeventRepository.save(followevent);
-    } catch (error) {
-      console.log(error);
-      throw new NotFoundException(`Follow event failed!`);
-    }
-
   }
 
   async findAll():Promise<Followevent[]> {
@@ -72,8 +75,7 @@ export class FolloweventService {
 
   async findFEventByUser(userId: number):Promise<Followevent[]> {
     const eventfollow = await this.followeventRepository.createQueryBuilder('followevent')
-    .innerJoinAndSelect('followevent.eventId', 'event')
-    .innerJoinAndSelect('followevent.userId', 'user')
+    .innerJoinAndSelect('followevent.event', 'event')
     .where('followevent.userId = :userId', { userId })
     .getMany();
 

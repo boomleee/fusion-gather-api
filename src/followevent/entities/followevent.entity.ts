@@ -5,12 +5,16 @@ import { Event } from 'src/event/entities/event.entity';
 @Entity({ name: 'followevent' })
 export class Followevent {
     @PrimaryColumn()
-    @ManyToOne(() => User)
-    @JoinColumn({ name: 'userId' })
-    userId: User;
+    userId: number;
 
     @PrimaryColumn()
+    eventId: number;
+
+    @ManyToOne(() => User)
+    @JoinColumn({ name: 'userId' })
+    user: User;
+
     @ManyToOne(() => Event)
     @JoinColumn({ name: 'eventId' })
-    eventId: Event;
+    event: Event;
 }
