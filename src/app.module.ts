@@ -14,6 +14,7 @@ import { TicketModule } from './ticket/ticket.module';
 import { BoothModule } from './booth/booth.module';
 import { QrcodeModule } from './qrcode/qrcode.module';
 import { ImageModule } from './image/image.module';
+import { FolloweventModule } from './followevent/followevent.module';
 
 @Module({
   imports: [
@@ -47,6 +48,7 @@ import { ImageModule } from './image/image.module';
     BoothModule,
     QrcodeModule,
     ImageModule,
+    FolloweventModule,
   ],
   controllers: [AppController],
   providers: [AppService],

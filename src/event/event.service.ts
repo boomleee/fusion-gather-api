@@ -87,7 +87,7 @@ export class EventService {
     const query = this.eventRepository.createQueryBuilder('event')
     .innerJoinAndSelect('event.author', 'user')
     .andWhere('event.isPublished = :isPublished', { isPublished: true })
-    .andWhere('event.startDateTime > :currentDate', { currentDate: new Date() })
+    // .andWhere('event.startDateTime > :currentDate', { currentDate: new Date() })
     .addOrderBy('event.startDateTime', 'ASC')
     .take(3);
     return query.getMany();
