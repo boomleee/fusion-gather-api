@@ -40,24 +40,28 @@ export class EventService {
   }
 
   async findAll({ userId, searchString, category, pageNumber, pageSize }): Promise<Event[]> {
-    const query = this.eventRepository.createQueryBuilder('event');
-
+    const query = this.eventRepository.createQueryBuilder('event')
+    .innerJoinAndSelect('event.author', 'user')
     // filter by user
     if (userId) {
       query.andWhere('event.author = :userId', { userId: userId });
+      return query.getMany();
     }
 
     // filter by searchString
     if (searchString) {
       query.andWhere('(event.title LIKE :searchString OR event.description LIKE :searchString)', { searchString: `%${searchString}%` });
+      query.andWhere('event.isPublished = :isPublished', { isPublished: true });
     }
 
     // filter by category
     if (category) {
-      query.andWhere('event.categoryId = :category', { categoryId: category });
+      query.andWhere('event.categoryId = :categoryId', { categoryId: category });
+      query.andWhere('event.isPublished = :isPublished', { isPublished: true });
     }
 
     // pagination
+    query.andWhere('event.isPublished = :isPublished', { isPublished: true });
     query.skip((pageNumber - 1) * pageSize).take(pageSize);
 
     return query.getMany();
@@ -80,6 +84,12 @@ export class EventService {
   async findPendingEvent(): Promise<Event[]> { 
     const query = this.eventRepository.createQueryBuilder('event');
     query.andWhere('event.isPublished = :isPublished', { isPublished: false });
+    return query.getMany();
+  }
+
+  async findPublishedEvent(): Promise<Event[]> {
+    const query = this.eventRepository.createQueryBuilder('event');
+    query.andWhere('event.isPublished = :isPublished', { isPublished: true });
     return query.getMany();
   }
 
@@ -114,3 +124,7 @@ export class EventService {
     await this.eventRepository.remove(eventToRemove);
   }
 }
+function innerJoinAndSelect(arg0: string, arg1: string) {
+  throw new Error('Function not implemented.');
+}
+
