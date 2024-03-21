@@ -54,9 +54,9 @@ export class ImageService {
     }
 
     const eventImages = this.imageRepository.createQueryBuilder('image')
+    .innerJoinAndSelect('image.eventId', 'event')
     .andWhere('image.eventId = :eventId', { eventId })
     .getMany();
-    
     return eventImages;
   }
 
@@ -69,6 +69,7 @@ export class ImageService {
       }
   
       const boothImages = this.imageRepository.createQueryBuilder('image')
+      .innerJoinAndSelect('image.boothId', 'booth')
       .andWhere('image.boothId = :boothId', { boothId })
       .getMany();
       

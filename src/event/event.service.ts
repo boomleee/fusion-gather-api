@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity'; 
 import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
+import { MoreThanOrEqual } from 'typeorm';
 
 @Injectable()
 export class EventService {
@@ -94,13 +95,19 @@ export class EventService {
   }
 
   async findLatestEvent(): Promise<Event[]> {
-    const query = this.eventRepository.createQueryBuilder('event')
-    .innerJoinAndSelect('event.author', 'user')
-    .andWhere('event.isPublished = :isPublished', { isPublished: true })
-    // .andWhere('event.startDateTime > :currentDate', { currentDate: new Date() })
-    .addOrderBy('event.startDateTime', 'ASC')
-    .take(3);
-    return query.getMany();
+    const currentDate = new Date().toISOString();
+    const events = await this.eventRepository.find({
+      relations: ['author'], 
+      where: {
+        isPublished: true,
+        startDateTime: MoreThanOrEqual(currentDate), //only data that is greater than or equal to current date
+      },
+      order: {
+        startDateTime: 'ASC', 
+      },
+      take: 3,
+    });
+    return events;
   }
 
   async update(id: number, updateEventDto: UpdateEventDto): Promise<Event> {
