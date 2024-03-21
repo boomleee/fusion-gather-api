@@ -38,12 +38,15 @@ export class RegisterboothService {
   }
 
   async checkUserIsRegistered(userId: number, boothId: number) {
-    const registerbooth = await this.registerboothRepository.findOne({
-      where: { userId: userId, boothId: boothId },
-    });
+    const registerbooth = await this.registerboothRepository.createQueryBuilder('registerbooth')
+        .where('registerbooth.userId = :userId', { userId })
+        .andWhere('registerbooth.boothId = :boothId', { boothId })
+        .getOne();
+
     if (registerbooth) return true;
     else return false;
-  }
+}
+
 
   async create(createRegisterboothDto: CreateRegisterboothDto) {
     const isUserExist = this.checkUserExist(createRegisterboothDto.userId);
@@ -57,7 +60,7 @@ export class RegisterboothService {
       throw new NotFoundException(`Booth does not exist!`);
     }
 
-    const isUserRegistered = this.checkUserIsRegistered(
+    const isUserRegistered = await this.checkUserIsRegistered(
       createRegisterboothDto.userId,
       createRegisterboothDto.boothId,
     );
