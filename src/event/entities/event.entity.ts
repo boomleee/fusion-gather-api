@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Category } from 'src/category/entities/category.entity';
 import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
 import { User } from 'src/user/entities/user.entity';

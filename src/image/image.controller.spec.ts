@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Test, TestingModule } from '@nestjs/testing';
 import { ImageController } from './image.controller';
 import { ImageService } from './image.service';

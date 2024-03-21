@@ -1,4 +1,3 @@
-
 /* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto'; 
@@ -7,13 +6,17 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity'; 
 import { Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
-
+import { Image } from 'src/image/entities/image.entity'; 
+import { ImageService } from 'src/image/image.service';
 @Injectable()
 export class EventService {
   constructor(
     @InjectRepository(Event)
     private readonly eventRepository: Repository<Event>,
-  ) { }
+    @InjectRepository(Image) // Thêm imageRepository vào constructor
+    private readonly imageRepository: Repository<Image>,
+    private imageService: ImageService,
+  ) {}
 
   //check event exist
   async checkEventTitleExist(title: string) {
@@ -24,7 +27,9 @@ export class EventService {
     else return false;
   }
 
-  async create(createEventDto: CreateEventDto, user: User) {
+  async create(createEventDto: CreateEventDto, user: User) { 
+    console.log("createEventDto2",createEventDto );
+
     const isEventTitleExist = await this.checkEventTitleExist(
       createEventDto.title,
     );
@@ -33,10 +38,16 @@ export class EventService {
       throw new NotFoundException(`Title is exist!`);
     }
 
-    const event = this.eventRepository.create(createEventDto);
+    const {imageUrl, ...dtoWithoutImage } = createEventDto;
+    const event = this.eventRepository.create({...dtoWithoutImage,imageUrl:''});
     event.author = user;
+    const newEvent = await this.eventRepository.save(event);
+    for (const image of imageUrl) {
+      console.log("image", image);
+      this.imageService.createImage(image, newEvent.id, null)
+    }
 
-    return await this.eventRepository.save(event);
+    return newEvent
   }
 
   async findAll({ userId, searchString, category, pageNumber, pageSize }): Promise<Event[]> {
@@ -77,6 +88,7 @@ export class EventService {
     return existingEvent;
   }
 
+
   async findPendingEvent(): Promise<Event[]> { 
     const query = this.eventRepository.createQueryBuilder('event');
     query.andWhere('event.isPublished = :isPublished', { isPublished: false });
@@ -93,16 +105,41 @@ export class EventService {
     return query.getMany();
   }
 
+  // async update(id: number, updateEventDto: UpdateEventDto): Promise<Event> {
+  //   const existingEvent = await this.eventRepository.findOne({ where: { id } });
+   
+  //   if (!existingEvent) {
+  //     throw new NotFoundException(`Event with ID ${id} not found`);
+  //   }
+  //   await this.removeImagesByEventId(id);
+  //   const {imageUrl, ...dtoWithoutImage } = updateEventDto;
+  //   const event = this.eventRepository.create({...dtoWithoutImage,imageUrl:''});
+  //   const savedEvent  = await this.eventRepository.save(event);
+  //   for (const image of imageUrl) {
+  //     this.imageService.createImage(image, savedEvent .id, null)
+  //   }
+  //   Object.assign(existingEvent, updateEventDto);
+  //   return await this.eventRepository.save(existingEvent);
+  // }
+
   async update(id: number, updateEventDto: UpdateEventDto): Promise<Event> {
     const existingEvent = await this.eventRepository.findOne({ where: { id } });
-
+  
     if (!existingEvent) {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
-    Object.assign(existingEvent, updateEventDto);
-
+    const {imageUrl, ...dtoWithoutImage } = updateEventDto;
+    if (imageUrl) {
+      await this.removeImagesByEventId(id);
+    for (const image of imageUrl) {
+      this.imageService.createImage(image, id, null)
+    }
+    }
+    Object.assign(existingEvent, dtoWithoutImage);
     return await this.eventRepository.save(existingEvent);
   }
+  
+
 
   async remove(id: number): Promise<void> {
     const eventToRemove = await this.eventRepository.findOne({ where: { id } });
@@ -110,7 +147,26 @@ export class EventService {
     if (!eventToRemove) {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
-
     await this.eventRepository.remove(eventToRemove);
   }
-}
+
+  async removeImagesByEventId(eventId): Promise<void> {
+    // Find all images related to the event
+    const imagesToRemove = await this.imageRepository.createQueryBuilder('image')
+    .where('image.eventId = :eventId', { eventId })
+    .getMany();
+    if (!imagesToRemove) {
+      throw new NotFoundException(`No images found for event ${eventId}`);
+    }
+
+    // Remove all images related to the event
+    try {
+      await this.imageRepository.remove(imagesToRemove);
+    } catch (error) {
+      // Handle error if needed
+      console.error('Error removing images:', error);
+      throw new Error('Failed to remove images');
+    }
+
+  }
+  }

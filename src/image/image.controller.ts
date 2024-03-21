@@ -1,34 +1,29 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+/* eslint-disable prettier/prettier */
+import { Controller, Get, Param,Patch, Body } from '@nestjs/common';
 import { ImageService } from './image.service';
-import { CreateImageDto } from './dto/create-image.dto';
-import { UpdateImageDto } from './dto/update-image.dto';
+import { UpdateImageUrlsDto } from './dto/update-image.dto';
 
 @Controller('image')
 export class ImageController {
   constructor(private readonly imageService: ImageService) {}
 
-  @Post()
-  create(@Body() createImageDto: CreateImageDto) {
-    return this.imageService.create(createImageDto);
+  @Get('/event/:eventId')
+  findImagesByEventId(@Param('eventId') eventId: string) {
+    return this.imageService.findImagesByEventId(+eventId);
   }
 
-  @Get()
-  findAll() {
-    return this.imageService.findAll();
+  @Get('/booth/:boothId')
+  findImagesByBoothId(@Param('boothId') boothId: string) {
+    return this.imageService.findImagesByBoothId(+boothId);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.imageService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateImageDto: UpdateImageDto) {
-    return this.imageService.update(+id, updateImageDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.imageService.remove(+id);
+  // @Delete('/event/:eventId')
+  // async removeByEventId(@Param('eventId') eventId: string): Promise<void> {
+  //   await this.imageService.removeImagesByEventId(+eventId);
+  // }
+  
+  @Patch('/event/:eventId') 
+  async updateImagebyEventId(@Param('eventId') eventId: string, @Body() updateImageUrlsDto: UpdateImageUrlsDto) {
+    return this.imageService.updateImagebyEventId(+eventId, updateImageUrlsDto);
   }
 }

@@ -1,9 +1,9 @@
+/* eslint-disable prettier/prettier */
 import {
     Column,
     Entity,
     JoinColumn,
     ManyToOne,
-    OneToOne,
     PrimaryGeneratedColumn,
   } from 'typeorm';
 import { Event } from 'src/event/entities/event.entity';

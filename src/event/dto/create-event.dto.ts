@@ -23,8 +23,8 @@ export class CreateEventDto {
   location: string;
 
   @IsNotEmpty()
-  @IsString()
-  imageUrl: string;
+  @IsString({ each: true })
+  imageUrl: string[];
 
   @IsNotEmpty()
   @IsString()
