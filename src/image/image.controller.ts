@@ -22,6 +22,16 @@ export class ImageController {
     return this.imageService.findOne(+id);
   }
 
+  @Get('/event/:eventId')
+  findImagesByEventId(@Param('eventId') eventId: string) {
+    return this.imageService.findImagesByEventId(+eventId);
+  }
+
+  @Get('/booth/:boothId')
+  findImagesByBoothId(@Param('boothId') boothId: string) {
+    return this.imageService.findImagesByBoothId(+boothId);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateImageDto: UpdateImageDto) {
     return this.imageService.update(+id, updateImageDto);
