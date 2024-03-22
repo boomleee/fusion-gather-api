@@ -40,6 +40,10 @@ export class EventController {
     return this.eventService.findLatestEvent();
   }
 
+  @Get('/published')
+  findPublishedEvents() {
+    return this.eventService.findPublishedEvent();
+  }
   @Get()
   findAll(
     @Query('searchString') searchString: string = "",

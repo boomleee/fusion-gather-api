@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -14,6 +15,8 @@ import { TicketModule } from './ticket/ticket.module';
 import { BoothModule } from './booth/booth.module';
 import { QrcodeModule } from './qrcode/qrcode.module';
 import { ImageModule } from './image/image.module';
+import { FolloweventModule } from './followevent/followevent.module';
+import { RegisterboothModule } from './registerbooth/registerbooth.module';
 
 @Module({
   imports: [
@@ -47,6 +50,8 @@ import { ImageModule } from './image/image.module';
     BoothModule,
     QrcodeModule,
     ImageModule,
+    FolloweventModule,
+    RegisterboothModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -36,10 +36,7 @@ export class Event {
 
   @Column()
   location: string;
-
-  @Column()
-  imageUrl: string;
-
+  
   @Column()
   startDateTime: string;
 

@@ -117,23 +117,4 @@ export class ImageService {
     return boothImages;
   }
 
-  // async removeImagesByEventId(eventId): Promise<void> {
-  //   // Find all images related to the event
-  //   const imagesToRemove = await this.imageRepository.createQueryBuilder('image')
-  //   .where('image.eventId = :eventId', { eventId })
-  //   .getMany();
-  //   if (!imagesToRemove) {
-  //     throw new NotFoundException(`No images found for event ${eventId}`);
-  //   }
-
-  //   // Remove all images related to the event
-  //   try {
-  //     await this.imageRepository.remove(imagesToRemove);
-  //   } catch (error) {
-  //     // Handle error if needed
-  //     console.error('Error removing images:', error);
-  //     throw new Error('Failed to remove images');
-  //   }
-
-  // }
 }
