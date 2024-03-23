@@ -1,4 +1,3 @@
-
 /* eslint-disable prettier/prettier */
 import {
   Controller,
@@ -71,4 +70,8 @@ export class EventController {
     return this.eventService.remove(+id);
   }
 
+  @Delete(':id/images')
+  removeImagesByEventId(@Param('id') id: string) {
+    return this.eventService.removeImagesByEventId(+id);
+  }
 }

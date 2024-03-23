@@ -14,7 +14,7 @@ import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
 import { Followevent } from 'src/followevent/entities/followevent.entity';
 import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { request } from 'http';
-
+import { ImageService } from 'src/image/image.service';
 @Injectable()
 export class EventService {
   constructor(
@@ -24,14 +24,15 @@ export class EventService {
     private readonly boothRepository: Repository<Booth>,
     @InjectRepository(Registerbooth)
     private readonly registerboothRepository: Repository<Registerbooth>,
-    @InjectRepository(Image)
-    private readonly imageRepository: Repository<Image>,
     @InjectRepository(Qrcode)
     private readonly qrcodeRepository: Repository<Qrcode>,
     @InjectRepository(Followevent)
     private readonly followeventRepository: Repository<Followevent>,
     @InjectRepository(Ticket)
     private readonly ticketRepository: Repository<Ticket>,
+    @InjectRepository(Image) 
+    private readonly imageRepository: Repository<Image>,
+    private imageService: ImageService,
   ) {}
 
   //check event exist
@@ -42,8 +43,7 @@ export class EventService {
     if (event) return true;
     else return false;
   }
-
-  async create(createEventDto: CreateEventDto, user: User) {
+  async create(createEventDto: CreateEventDto, user: User) { 
     const isEventTitleExist = await this.checkEventTitleExist(
       createEventDto.title,
     );
@@ -51,11 +51,16 @@ export class EventService {
     if (isEventTitleExist) {
       throw new NotFoundException(`Title is exist!`);
     }
-
-    const event = this.eventRepository.create(createEventDto);
+    const {imageUrl, ...dtoWithoutImage } = createEventDto;
+    const event = this.eventRepository.create({...dtoWithoutImage});
     event.author = user;
+    const newEvent = await this.eventRepository.save(event);
+    for (const image of imageUrl) {
+      console.log("image", image);
+      this.imageService.createImage(image, newEvent.id, null)
+    }
 
-    return await this.eventRepository.save(event);
+    return newEvent
   }
 
   async findAll({
@@ -141,15 +146,21 @@ export class EventService {
 
   async update(id: number, updateEventDto: UpdateEventDto): Promise<Event> {
     const existingEvent = await this.eventRepository.findOne({ where: { id } });
-
+  
     if (!existingEvent) {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
-    Object.assign(existingEvent, updateEventDto);
-
+    const {imageUrl, ...dtoWithoutImage } = updateEventDto;
+    if (imageUrl) {
+      await this.removeImagesByEventId(id);
+    for (const image of imageUrl) {
+      this.imageService.createImage(image, id, null)
+    }
+    }
+    Object.assign(existingEvent, dtoWithoutImage);
     return await this.eventRepository.save(existingEvent);
   }
-
+  
   async remove(id: number): Promise<void> {
     const eventToRemove = await this.eventRepository.findOne({ where: { id } });
 
@@ -229,4 +240,21 @@ export class EventService {
 
     await this.eventRepository.remove(eventToRemove);
   }
-}
+
+  async removeImagesByEventId(eventId): Promise<void> {
+    const imagesToRemove = await this.imageRepository.createQueryBuilder('image')
+    .where('image.eventId = :eventId', { eventId })
+    .getMany();
+    if (!imagesToRemove) {
+      throw new NotFoundException(`No images found for event ${eventId}`);
+    }
+    try {
+      await this.imageRepository.remove(imagesToRemove);
+    } catch (error) {
+      // Handle error if needed
+      console.error('Error removing images:', error);
+      throw new Error('Failed to remove images');
+    }
+
+  }
+  }

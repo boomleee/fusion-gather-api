@@ -1,4 +1,3 @@
-
 /* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { EventService } from './event.service';
@@ -14,6 +13,7 @@ import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
 import { Booth } from 'src/booth/entities/booth.entity';
 import { Followevent } from 'src/followevent/entities/followevent.entity';
 import { Ticket } from 'src/ticket/entities/ticket.entity';
+import { ImageService } from 'src/image/image.service';
 
 @Module({
   imports: [
@@ -28,7 +28,7 @@ import { Ticket } from 'src/ticket/entities/ticket.entity';
     TypeOrmModule.forFeature([Ticket]),
   ],
   controllers: [EventController],
-  providers: [EventService, UserService],
+  providers: [EventService, UserService, ImageService],
 
 })
 export class EventModule {}

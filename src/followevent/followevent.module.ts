@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { FolloweventService } from './followevent.service';
 import { UserService } from 'src/user/user.service';
@@ -12,6 +13,7 @@ import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
 import { Image } from 'src/image/entities/image.entity';
 import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
 import { Ticket } from 'src/ticket/entities/ticket.entity';
+import { ImageService } from 'src/image/image.service';
 
 @Module({
   imports: [
@@ -25,6 +27,6 @@ import { Ticket } from 'src/ticket/entities/ticket.entity';
     TypeOrmModule.forFeature([Ticket]),
   ],
   controllers: [FolloweventController],
-  providers: [FolloweventService, UserService, EventService],
+  providers: [FolloweventService, UserService, EventService, ImageService],
 })
 export class FolloweventModule {}

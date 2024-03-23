@@ -1,13 +1,11 @@
+/* eslint-disable prettier/prettier */
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { CreateImageDto } from './dto/create-image.dto';
-import { UpdateImageDto } from './dto/update-image.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Image } from './entities/image.entity';
 import { Event } from 'src/event/entities/event.entity';
-import { In } from 'typeorm';
+import { Image } from './entities/image.entity';
 import { Booth } from 'src/booth/entities/booth.entity';
-
+import { UpdateImageUrlsDto } from './dto/update-image.dto';
 @Injectable()
 export class ImageService {
   constructor(
@@ -32,18 +30,21 @@ export class ImageService {
     else return false;
   }
 
-  create(createImageDto: CreateImageDto) {
-    return 'This action adds a new image';
-  }
+  async createImage(imageUrls, eventId, boothId): Promise<Image> {
+    const event = await this.eventRepository.findOne({
+      where: { id: eventId },
+    });
 
-  findAll() {
-    return `This action returns all image`;
-  }
+    const booth = await this.boothRepository.findOne({
+      where: { id: boothId },
+    });
+    const image = new Image();
+    image.url = imageUrls;
+    image.eventId = event;
+    image.boothId = booth;
 
-  findOne(id: number) {
-    return `This action returns a #${id} image`;
+    return await this.imageRepository.save(image);
   }
-  
 
   async findImagesByEventId(eventId: number) {
 
@@ -76,11 +77,40 @@ export class ImageService {
       return boothImages;
     }
 
-  update(id: number, updateImageDto: UpdateImageDto) {
-    return `This action updates a #${id} image`;
-  }
+  async updateImagebyEventId(
+    eventId,
+    updateImageUrlsDto: UpdateImageUrlsDto,
+  ): Promise<Image[]> {
+    const event = await this.eventRepository.findOne({
+      where: { id: eventId },
+    });
 
-  remove(id: number) {
-    return `This action removes a #${id} image`;
+    if (!event) {
+      throw new NotFoundException(`Event ${eventId} not found`);
+    }
+
+    const images = await this.imageRepository.find({
+      where: { eventId: eventId },
+    });
+
+    if (!images || images.length === 0) {
+      throw new NotFoundException(`No images found for event ${eventId}`);
+    }
+
+    if (updateImageUrlsDto.imageUrls.length !== images.length) {
+      throw new Error(
+        'Number of URLs provided does not match the number of images',
+      );
+    }
+
+    // Update each image with corresponding URL
+    const updatedImages = await Promise.all(
+      images.map(async (image, index) => {
+        image.url = updateImageUrlsDto.imageUrls[index];
+        return await this.imageRepository.save(image);
+      }),
+    );
+
+    return updatedImages;
   }
 }
