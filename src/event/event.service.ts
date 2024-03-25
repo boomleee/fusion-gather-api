@@ -128,6 +128,21 @@ export class EventService {
     return query.getMany();
   }
 
+  async publishEvent(id: number): Promise<Event> {
+    const existingEvent = await this.eventRepository.findOne({ where: { id } });
+
+    if (!existingEvent) {
+      throw new NotFoundException(`Event with ID ${id} not found`);
+    }
+
+    if(!existingEvent.isPublished) {
+      existingEvent.isPublished = true;
+    } else {
+      existingEvent.isPublished = false;
+    }
+    return await this.eventRepository.save(existingEvent);
+  }
+
   async findLatestEvent(): Promise<Event[]> {
     const currentDate = new Date().toISOString();
     const events = await this.eventRepository.find({
