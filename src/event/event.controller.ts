@@ -44,6 +44,12 @@ export class EventController {
   findPublishedEvents() {
     return this.eventService.findPublishedEvent();
   }
+
+  @Post('/publishEvent/:id')
+  publishEvent(@Param('id') id: string) {
+    return this.eventService.publishEvent(+id);
+  }
+
   @Get()
   findAll(
     @Query('searchString') searchString: string = "",
