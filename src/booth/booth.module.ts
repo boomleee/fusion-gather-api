@@ -9,6 +9,7 @@ import { Event } from 'src/event/entities/event.entity';
 import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
 import { Image } from 'src/image/entities/image.entity';
 import { Type } from 'class-transformer';
+import { ImageService } from 'src/image/image.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Booth]),
@@ -19,6 +20,6 @@ import { Type } from 'class-transformer';
     TypeOrmModule.forFeature([Image]),
   ],
   controllers: [BoothController],
-  providers: [BoothService],
+  providers: [BoothService, ImageService],
 })
 export class BoothModule {}

@@ -13,6 +13,10 @@ export class CreateBoothDto {
     name: string;
 
     @IsNotEmpty()
+    @IsString({ each: true })
+    imageUrl: string[];
+
+    @IsNotEmpty()
     @IsString()
     description: string;
 
