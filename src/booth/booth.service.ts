@@ -16,6 +16,7 @@ import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
 import { Image } from 'src/image/entities/image.entity';
+import { ImageService } from 'src/image/image.service';
 import e from 'express';
 
 @Injectable()
@@ -31,6 +32,7 @@ export class BoothService {
     @InjectRepository(Registerbooth)
     private readonly registerboothRepository: Repository<Registerbooth>,
     @InjectRepository(Image) private readonly imageRepository: Repository<Image>,
+    private imageService: ImageService,
   ) {}
 
   async checkEventExist(eventId: number) {
@@ -84,18 +86,21 @@ export class BoothService {
       throw new NotFoundException(`User ${createBoothDto.vendorId} not exist`);
     }
 
-    try {
+    const { imageUrl, ...dtoWithoutImage } = createBoothDto;
+
       const booth = this.boothRepository.create({
-        ...createBoothDto,
+        ...dtoWithoutImage,
         eventId: event,
         vendorId: user,
       });
 
-      return await this.boothRepository.save(booth);
-    } catch (error) {
-      console.error(error);
-      throw new Error('An error occurred while creating the booth');
-    }
+      const newBooth = await this.boothRepository.save(booth);
+      for (const image of imageUrl) {
+        this.imageService.createBoothImages(image, newBooth.id);
+      }
+
+      return newBooth;
+
   }
 
   async findAll(): Promise<Booth[]> {
@@ -160,6 +165,22 @@ export class BoothService {
     return false;
   }
 
+  async removeImagesByBoothId(boothId: number) {
+    const images = await this.imageRepository.createQueryBuilder('image')
+      .where('image.boothId = :boothId', { boothId })
+      .getMany();
+
+    if (!images) {
+      throw new NotFoundException(`No images found for booth ${boothId}`);
+    }
+
+    if (images.length > 0) {
+      images.forEach(async (image) => {
+        await this.imageRepository.remove(image);
+      });
+    }
+  }
+
   async update(
     userId: number,
     boothId: number,
@@ -189,7 +210,15 @@ export class BoothService {
     if (!existingBooth) {
       throw new NotFoundException(`Booth with ID ${boothId} not found`);
     }
-    Object.assign(existingBooth, updateBoothDto);
+
+    const { imageUrl, ...dtoWithoutImage } = updateBoothDto;
+    if (imageUrl) {
+      await this.removeImagesByBoothId(boothId);
+      for (const image of imageUrl) {
+        this.imageService.createBoothImages(image, boothId);
+      }
+    }
+    Object.assign(existingBooth, dtoWithoutImage);
     return await this.boothRepository.save(existingBooth);
   }
 

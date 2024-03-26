@@ -46,6 +46,18 @@ export class ImageService {
     return await this.imageRepository.save(image);
   }
 
+  async createBoothImages(imageUrls: string, boothId: number): Promise<Image> {
+    const booth = await this.boothRepository.findOne({
+      where: { id: boothId },
+    });
+
+    const image = new Image();
+    image.url = imageUrls;
+    image.boothId = booth;
+
+    return await this.imageRepository.save(image);
+  }
+
   async findImagesByEventId(eventId: number) {
 
     const isEventExist = await this.checkEventExist(eventId);

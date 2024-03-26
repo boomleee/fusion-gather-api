@@ -12,6 +12,9 @@ export class UpdateBoothDto extends PartialType(CreateBoothDto) {
     description: string;
 
     @IsNotEmpty()
+    imageUrl: string[];
+
+    @IsNotEmpty()
     @IsNumber()
     latitude: number;
 
