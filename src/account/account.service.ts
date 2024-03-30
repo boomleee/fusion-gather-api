@@ -4,10 +4,11 @@ import { UserService } from 'src/user/user.service';
 import { RegisterDto } from './dto/register.dto';
 import { CreateUserDto } from 'src/user/dto/create-user.dto';
 import { Account } from './entities/account.entity';
+import { User } from 'src/user/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { In, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { MailerService } from '@nestjs-modules/mailer';
+import { MailerService } from '@nestjs-modules/mailer'
 import { VerifyAccountDto } from './dto/verify-account.dto';
 import { ResetRequestDto } from './dto/reset-request.dto';
 import { ResetPasswordCodeDto } from './dto/reset-password-code.dto';
@@ -116,6 +117,27 @@ export class AccountService {
     return await this.accountRepository.save(existingAccount);
   }
 
+  async disableAccount(id: number): Promise<Account> {
+    const existingAccount = await this.accountRepository.findOne({
+      where: { id },
+    });
+
+    if (!existingAccount) {
+      throw new NotFoundException(`Account with ID ${id} not found`);
+    }
+
+    if (existingAccount.isActivated === false) {
+      throw new NotFoundException(`Account with ID ${id} is already disabled`);
+    }
+
+    existingAccount.isActivated = false;
+
+    const disableAcc =  await this.accountRepository.save(existingAccount);
+    console.log(`Account with ID ${id} has been disabled`);
+
+    return disableAcc;
+  }
+
   async remove(id: number): Promise<void> {
     const accountToRemove = await this.accountRepository.findOne({
       where: { id },
@@ -126,6 +148,9 @@ export class AccountService {
     }
 
     await this.accountRepository.remove(accountToRemove);
+
+    await this.userService.remove(id);
+    console.log(`Account with ID ${id} has been removed`);
   }
 
   private async hashPassword(password: string): Promise<string> {
@@ -227,6 +252,10 @@ export class AccountService {
     const checkPass = bcrypt.compareSync(loginDto.password, account.password);
     if (!checkPass) {
       throw new NotFoundException('Password is not correct');
+    }
+
+    if (!account.isActivated) {
+      throw new NotFoundException('Account is disabled');
     }
     const payload = { id: account.id };
     return this.generateToken(payload);

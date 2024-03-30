@@ -1,7 +1,7 @@
-import { CanActivate, ExecutionContext, HttpException, Injectable, UnauthorizedException } from "@nestjs/common";
+
+import { CanActivate, ExecutionContext, HttpException, Injectable } from "@nestjs/common";
 import { JwtService } from "@nestjs/jwt";
 import { InjectRepository } from "@nestjs/typeorm";
-import { Observable } from "rxjs";
 import { Account } from "src/account/entities/account.entity";
 import { UserService } from "src/user/user.service";
 import { Repository } from "typeorm";
@@ -22,7 +22,6 @@ export class RefreshGuard implements CanActivate {
             const token = this.extractTokenFromHeader(request)
             if (token) {
                 const payload = await this.jwtService.verify(token, { secret: process.env.REFRESH_TOKEN_KEY })
-                console.log(payload);
                 const user = await this.userService.findOne(payload?.id)
                 if (!user) throw new HttpException('Unauthorized!', 400)
                 request['user'] = user

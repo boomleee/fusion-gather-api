@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -8,6 +9,14 @@ import { UserModule } from './user/user.module';
 import { dataSourceOptions } from 'db/data-source';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { ConfigModule } from '@nestjs/config';
+import { EventModule } from './event/event.module';
+import { CategoryModule } from './category/category.module';
+import { TicketModule } from './ticket/ticket.module';
+import { BoothModule } from './booth/booth.module';
+import { QrcodeModule } from './qrcode/qrcode.module';
+import { ImageModule } from './image/image.module';
+import { FolloweventModule } from './followevent/followevent.module';
+import { RegisterboothModule } from './registerbooth/registerbooth.module';
 
 @Module({
   imports: [
@@ -35,6 +44,14 @@ import { ConfigModule } from '@nestjs/config';
     DummyModule,
     AccountModule,
     UserModule,
+    EventModule,
+    CategoryModule,
+    TicketModule,
+    BoothModule,
+    QrcodeModule,
+    ImageModule,
+    FolloweventModule,
+    RegisterboothModule,
   ],
   controllers: [AppController],
   providers: [AppService],
