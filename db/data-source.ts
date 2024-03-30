@@ -14,11 +14,11 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 
 export const dataSourceOptions: DataSourceOptions = {
   type: 'mysql',
-  host: 'bmdbdoixkeygfihsxug1-mysql.services.clever-cloud.com',
+  host: '34.81.139.152',
   port: 3306,
-  username: 'uipjlkapfvp8bhoo',
-  password: '5ZrQnvzl18mQruQf93qO',
-  database: 'bmdbdoixkeygfihsxug1',
+  username: 'root',
+  password: '123456789',
+  database: 'fusiongather',
   entities: ['dist/**/*.entity{.ts,.js}'],
   migrations: ['dist/db/migrations/*.js'],
   synchronize: false,
