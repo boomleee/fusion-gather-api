@@ -5,6 +5,9 @@
   "author": "",
   "private": true,
   "license": "UNLICENSED",
+  "engines": {
+    "node": "18.x"
+  },
   "scripts": {
     "postinstall": "npm run prestart:prod",
     "build": "nest build",
@@ -68,9 +71,7 @@
     "tsconfig-paths": "^4.2.0",
     "typescript": "^5.1.3"
   },
-  "engines": {
-    "node": "18.17.0"
-  },
+
   "jest": {
     "moduleFileExtensions": [
       "js",
