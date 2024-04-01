@@ -37,6 +37,11 @@ export class BoothController {
     return this.boothService.update(+userId, +boothId, updateBoothDto);
   }
 
+  @Patch('assign/:userId/:boothId')
+  assignBooth(@Param('userId') userId: string, @Param('boothId') boothId: string) {
+    return this.boothService.assignBoothToUser(+userId, +boothId);
+  }
+
   @Delete(':userId/:boothId')
   remove(@Param('userId') userId: string, @Param('boothId') boothId: string) {
     return this.boothService.remove(+userId, +boothId);

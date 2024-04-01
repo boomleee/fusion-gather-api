@@ -6,12 +6,17 @@ import { Booth } from './entities/booth.entity';
 import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Event } from 'src/event/entities/event.entity';
+import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
+import { Image } from 'src/image/entities/image.entity';
+import { Type } from 'class-transformer';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Booth]),
     TypeOrmModule.forFeature([Event]),
     TypeOrmModule.forFeature([Qrcode]),
     TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([Registerbooth]),
+    TypeOrmModule.forFeature([Image]),
   ],
   controllers: [BoothController],
   providers: [BoothService],

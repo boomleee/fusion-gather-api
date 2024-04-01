@@ -9,18 +9,27 @@ import { User } from 'src/user/entities/user.entity';
 import { Category } from 'src/category/entities/category.entity';
 import { ImageService } from 'src/image/image.service';
 import { Image } from 'src/image/entities/image.entity';
+import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
+import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
 import { Booth } from 'src/booth/entities/booth.entity';
+import { Followevent } from 'src/followevent/entities/followevent.entity';
+import { Ticket } from 'src/ticket/entities/ticket.entity';
+import { QrCodeService } from 'src/qrcode/qrcode.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Event]),
+    TypeOrmModule.forFeature([Booth]),
     TypeOrmModule.forFeature([User]),
     TypeOrmModule.forFeature([Category]),
     TypeOrmModule.forFeature([Image]),
-    TypeOrmModule.forFeature([Booth]),
+    TypeOrmModule.forFeature([Qrcode]),
+    TypeOrmModule.forFeature([Registerbooth]),
+    TypeOrmModule.forFeature([Followevent]),
+    TypeOrmModule.forFeature([Ticket]),
   ],
   controllers: [EventController],
-  providers: [EventService, UserService, ImageService],
+  providers: [EventService, UserService, ImageService,QrCodeService],
 
 })
 export class EventModule {}

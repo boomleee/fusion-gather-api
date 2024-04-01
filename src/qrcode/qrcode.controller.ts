@@ -1,34 +1,35 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
-import { QrcodeService } from './qrcode.service';
-import { CreateQrcodeDto } from './dto/create-qrcode.dto';
-import { UpdateQrcodeDto } from './dto/update-qrcode.dto';
+/* eslint-disable prettier/prettier */
+import { Controller, Post, Param, NotFoundException, Get, InternalServerErrorException } from '@nestjs/common';
+import { QrCodeService } from './qrcode.service';
 
-@Controller('qrcode')
-export class QrcodeController {
-  constructor(private readonly qrcodeService: QrcodeService) {}
+@Controller('qr-code')
+export class QrCodeController {
+  constructor(private readonly qrCodeService: QrCodeService) {}
 
-  @Post()
-  create(@Body() createQrcodeDto: CreateQrcodeDto) {
-    return this.qrcodeService.create(createQrcodeDto);
+  @Post(':eventId')
+  async generateQRCode(@Param('eventId') eventId: number) {
+    try {
+      const qrCodeImage = await this.qrCodeService.generateAndSaveQRCode(eventId);
+      return qrCodeImage;
+    } catch (error) {
+      console.error('Error generating QR Code:', error);
+      throw new NotFoundException('QR Code generation failed');
+    }
   }
-
-  @Get()
-  findAll() {
-    return this.qrcodeService.findAll();
-  }
-
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.qrcodeService.findOne(+id);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateQrcodeDto: UpdateQrcodeDto) {
-    return this.qrcodeService.update(+id, updateQrcodeDto);
-  }
-
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.qrcodeService.remove(+id);
+  
+  @Get(':eventId')
+  async getQRCodeData(@Param('eventId') eventId: string): Promise<any> {
+    try {
+      const qrCodeData = await this.qrCodeService.getQRCodeData(eventId);
+      if (qrCodeData) {
+        return qrCodeData;
+      }
+      throw new NotFoundException(`QR Code data not found for eventId ${eventId}`);
+    } catch (error) {
+      console.error('Error getting QR Code data:', error);
+      throw new InternalServerErrorException('Internal Server Error');
+    }
   }
 }
+
+

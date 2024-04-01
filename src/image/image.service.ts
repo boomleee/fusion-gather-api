@@ -2,10 +2,10 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Event } from 'src/event/entities/event.entity';
 import { Image } from './entities/image.entity';
+import { Event } from 'src/event/entities/event.entity';
+
 import { Booth } from 'src/booth/entities/booth.entity';
-import { UpdateImageUrlsDto } from './dto/update-image.dto';
 
 @Injectable()
 export class ImageService {
@@ -49,57 +49,21 @@ export class ImageService {
     if (booth) return true;
     else return false;
   }
+  
 
   async findImagesByEventId(eventId: number) {
+
     const isEventExist = await this.checkEventExist(eventId);
 
     if (!isEventExist) {
       throw new NotFoundException(`Event ${eventId} not exist`);
     }
 
-    const eventImages = this.imageRepository
-      .createQueryBuilder('image')
-      .andWhere('image.eventId = :eventId', { eventId })
-      .getMany();
-
+    const eventImages = this.imageRepository.createQueryBuilder('image')
+    .innerJoinAndSelect('image.eventId', 'event')
+    .andWhere('image.eventId = :eventId', { eventId })
+    .getMany();
     return eventImages;
-  }
-
-  async updateImagebyEventId(
-    eventId,
-    updateImageUrlsDto: UpdateImageUrlsDto,
-  ): Promise<Image[]> {
-    const event = await this.eventRepository.findOne({
-      where: { id: eventId },
-    });
-
-    if (!event) {
-      throw new NotFoundException(`Event ${eventId} not found`);
-    }
-
-    const images = await this.imageRepository.find({
-      where: { eventId: eventId },
-    });
-
-    if (!images || images.length === 0) {
-      throw new NotFoundException(`No images found for event ${eventId}`);
-    }
-
-    if (updateImageUrlsDto.imageUrls.length !== images.length) {
-      throw new Error(
-        'Number of URLs provided does not match the number of images',
-      );
-    }
-
-    // Update each image with corresponding URL
-    const updatedImages = await Promise.all(
-      images.map(async (image, index) => {
-        image.url = updateImageUrlsDto.imageUrls[index];
-        return await this.imageRepository.save(image);
-      }),
-    );
-
-    return updatedImages;
   }
 
   async findImagesByBoothId(boothId: number) {

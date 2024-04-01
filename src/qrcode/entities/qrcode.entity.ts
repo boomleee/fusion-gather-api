@@ -1,3 +1,5 @@
+/* eslint-disable prettier/prettier */
+import { Event } from 'src/event/entities/event.entity';
 import {
     Column,
     Entity,
@@ -10,6 +12,10 @@ export class Qrcode {
     @PrimaryGeneratedColumn()
     id: number;
     
-    @Column()
-    code: string;
+    @Column('text')
+    qrCode: string; 
+
+    @OneToOne(() => Event)
+    @JoinColumn({ name: 'eventId' })
+    eventId: Event;
 }
