@@ -240,6 +240,12 @@ export class EventService {
   async update(id: number, updateEventDto: UpdateEventDto): Promise<Event> {
     const existingEvent = await this.eventRepository.findOne({ where: { id } });
 
+    const follower = await this.followeventRepository
+      .createQueryBuilder('followevent')
+      .innerJoinAndSelect('followevent.user', 'user')
+      .where('followevent.eventId = :id', { id })
+      .getMany();
+
     if (!existingEvent) {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
@@ -251,6 +257,26 @@ export class EventService {
       }
     }
     Object.assign(existingEvent, dtoWithoutImage);
+
+    if (existingEvent.isPublished) {
+      if (follower.length > 0) {
+        follower.forEach(async (follow) => {
+          await this.MailerService.sendMail({
+            to: follow.user.email,
+            subject: 'Event Updated',
+            html: `<head>
+        <title>Event Updated Notification</title>
+      </head>
+      <body>
+        <h1>Event Updated Notification</h1>
+        <p>Hello, ${follow.user.firstName} ${follow.user.lastName}</p>
+        <p>Your following event <strong>${existingEvent.title}</strong> has been updated. Click <a href="https://fusiongather.me/event/${existingEvent.id}">here</a> now to view detail and register yourself to be an attendee.</p>
+        <p>Thank you!</p>
+      </body>`,
+          });
+        });
+      }
+    }
     return await this.eventRepository.save(existingEvent);
   }
 
