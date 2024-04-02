@@ -4,35 +4,39 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity';
-import { In, Repository } from 'typeorm';
+import { DeepPartial, In, Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { MoreThanOrEqual } from 'typeorm';
-import { Booth } from 'src/booth/entities/booth.entity';
-import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
 import { Image } from 'src/image/entities/image.entity';
 import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
-import { Followevent } from 'src/followevent/entities/followevent.entity';
-import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { request } from 'http';
 import { ImageService } from 'src/image/image.service';
+import { Booth } from 'src/booth/entities/booth.entity';
+import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
+import { Followevent } from 'src/followevent/entities/followevent.entity';
+import { Ticket } from 'src/ticket/entities/ticket.entity';
+import { QrCodeService } from 'src/qrcode/qrcode.service';
+import { MailerService } from '@nestjs-modules/mailer';
 @Injectable()
 export class EventService {
   constructor(
+    @InjectRepository(Image)
+    private readonly imageRepository: Repository<Image>,
+    private imageService: ImageService,
     @InjectRepository(Event)
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(Booth)
     private readonly boothRepository: Repository<Booth>,
     @InjectRepository(Registerbooth)
     private readonly registerboothRepository: Repository<Registerbooth>,
-    @InjectRepository(Qrcode)
-    private readonly qrcodeRepository: Repository<Qrcode>,
     @InjectRepository(Followevent)
     private readonly followeventRepository: Repository<Followevent>,
     @InjectRepository(Ticket)
     private readonly ticketRepository: Repository<Ticket>,
-    @InjectRepository(Image) 
-    private readonly imageRepository: Repository<Image>,
-    private imageService: ImageService,
+    @InjectRepository(Qrcode)
+    private readonly qrCodeRepository: Repository<Qrcode>,
+    private readonly qrCodeService: QrCodeService,
+    private MailerService: MailerService,
   ) {}
 
   //check event exist
@@ -43,24 +47,38 @@ export class EventService {
     if (event) return true;
     else return false;
   }
-  async create(createEventDto: CreateEventDto, user: User) { 
-    const isEventTitleExist = await this.checkEventTitleExist(
-      createEventDto.title,
-    );
 
-    if (isEventTitleExist) {
-      throw new NotFoundException(`Title is exist!`);
-    }
-    const {imageUrl, ...dtoWithoutImage } = createEventDto;
-    const event = this.eventRepository.create({...dtoWithoutImage});
-    event.author = user;
-    const newEvent = await this.eventRepository.save(event);
-    for (const image of imageUrl) {
-      console.log("image", image);
-      this.imageService.createImage(image, newEvent.id, null)
-    }
+  async create(createEventDto: CreateEventDto, user: User) {
+    try {
+      const isEventTitleExist = await this.checkEventTitleExist(
+        createEventDto.title,
+      );
 
-    return newEvent
+      if (isEventTitleExist) {
+        throw new NotFoundException(`Title is exist!`);
+      }
+
+      const { imageUrl, ...dtoWithoutImage } = createEventDto;
+      const event = this.eventRepository.create({
+        ...dtoWithoutImage,
+      } as DeepPartial<Event>);
+
+      event.author = user;
+      const newEvent = await this.eventRepository.save(event);
+
+      // Lưu các hình ảnh liên quan đến sự kiện
+      for (const image of imageUrl) {
+        await this.imageService.createImage(image, newEvent.id, null);
+      }
+      const qrCodeId = await this.qrCodeService.generateAndSaveQRCode(
+        newEvent.id,
+      );
+      console.log('qrCodeId', qrCodeId);
+      return newEvent;
+    } catch (error) {
+      console.error('Error creating event:', error);
+      throw new Error('Internal Server Error');
+    }
   }
 
   async findAll({
@@ -76,6 +94,7 @@ export class EventService {
     // filter by user
     if (userId) {
       query.andWhere('event.author = :userId', { userId: userId });
+      return query.getMany();
       return query.getMany();
     }
 
@@ -94,9 +113,14 @@ export class EventService {
         categoryId: category,
       });
       query.andWhere('event.isPublished = :isPublished', { isPublished: true });
+      query.andWhere('event.categoryId = :categoryId', {
+        categoryId: category,
+      });
+      query.andWhere('event.isPublished = :isPublished', { isPublished: true });
     }
 
     // pagination
+    query.andWhere('event.isPublished = :isPublished', { isPublished: true });
     query.andWhere('event.isPublished = :isPublished', { isPublished: true });
     query.skip((pageNumber - 1) * pageSize).take(pageSize);
 
@@ -135,11 +159,65 @@ export class EventService {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
 
-    if(!existingEvent.isPublished) {
+    const follower = await this.followeventRepository
+      .createQueryBuilder('followevent')
+      .innerJoinAndSelect('followevent.user', 'user')
+      .where('followevent.eventId = :id', { id })
+      .getMany();
+
+      const vendorRequest = await this.registerboothRepository.createQueryBuilder('registerbooth')
+      .leftJoinAndSelect('registerbooth.user', 'user')
+      .leftJoinAndSelect('registerbooth.booth', 'booth')
+      .where('booth.eventId = :id', { id })
+      .getMany();
+
+      const uniqueUsers = new Map<number, User>();
+      vendorRequest.forEach(request => {
+        uniqueUsers.set(request.user.id, request.user);
+    });
+
+    if (!existingEvent.isPublished) {
       existingEvent.isPublished = true;
-    } else {
-      existingEvent.isPublished = false;
+    } 
+
+    if (existingEvent.isPublished) {
+      if (follower.length > 0) {
+      follower.forEach(async (follow) => {
+        await this.MailerService.sendMail({
+          to: follow.user.email,
+          subject: 'Event Published',
+          html: `<head>
+        <title>Event Published Notification</title>
+      </head>
+      <body>
+        <h1>Event Published Notification</h1>
+        <p>Hello, ${follow.user.firstName} ${follow.user.lastName}</p>
+        <p>Your following event <strong>${existingEvent.title}</strong> has been published. Click <a href="https://fusiongather.me/event/${existingEvent.id}">here</a> now to register yourself to be an attendee.</p>
+        <p>Thank you!</p>
+      </body>`,
+        });
+      });
+      }
     }
+    if (vendorRequest.length > 0) {
+      vendorRequest.forEach(async (request) => {
+        await this.MailerService.sendMail({
+          to: request.user.email,
+          subject: 'Event Published',
+          html: `<head>
+        <title>Event Published Notification</title>
+      </head>
+      <body>
+        <h1>Event Published Notification</h1>
+        <p>Hello, ${request.user.firstName} ${request.user.lastName}</p>
+        <p> Event <strong>${existingEvent.title}</strong> that you have request booth has been published. Check your email box to know if your request have been approved or not.</p>
+        <p>Thank you!</p>
+      </body>`,
+        });
+        await this.registerboothRepository.remove(request);
+      });
+    }
+
     return await this.eventRepository.save(existingEvent);
   }
 
@@ -161,21 +239,47 @@ export class EventService {
 
   async update(id: number, updateEventDto: UpdateEventDto): Promise<Event> {
     const existingEvent = await this.eventRepository.findOne({ where: { id } });
-  
+
+    const follower = await this.followeventRepository
+      .createQueryBuilder('followevent')
+      .innerJoinAndSelect('followevent.user', 'user')
+      .where('followevent.eventId = :id', { id })
+      .getMany();
+
     if (!existingEvent) {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
-    const {imageUrl, ...dtoWithoutImage } = updateEventDto;
+    const { imageUrl, ...dtoWithoutImage } = updateEventDto;
     if (imageUrl) {
       await this.removeImagesByEventId(id);
-    for (const image of imageUrl) {
-      this.imageService.createImage(image, id, null)
-    }
+      for (const image of imageUrl) {
+        this.imageService.createImage(image, id, null);
+      }
     }
     Object.assign(existingEvent, dtoWithoutImage);
+
+    if (existingEvent.isPublished) {
+      if (follower.length > 0) {
+        follower.forEach(async (follow) => {
+          await this.MailerService.sendMail({
+            to: follow.user.email,
+            subject: 'Event Updated',
+            html: `<head>
+        <title>Event Updated Notification</title>
+      </head>
+      <body>
+        <h1>Event Updated Notification</h1>
+        <p>Hello, ${follow.user.firstName} ${follow.user.lastName}</p>
+        <p>Your following event <strong>${existingEvent.title}</strong> has been updated. Click <a href="https://fusiongather.me/event/${existingEvent.id}">here</a> now to view detail and register yourself to be an attendee.</p>
+        <p>Thank you!</p>
+      </body>`,
+          });
+        });
+      }
+    }
     return await this.eventRepository.save(existingEvent);
   }
-  
+
   async remove(id: number): Promise<void> {
     const eventToRemove = await this.eventRepository.findOne({ where: { id } });
 
@@ -199,6 +303,15 @@ export class EventService {
           requestToRemove.forEach(async (request) => {
             await this.registerboothRepository.remove(request);
           });
+        }
+
+        const qrcodeToRemove = await this.qrCodeRepository
+          .createQueryBuilder('qrcode')
+          .where('qrcode.boothId = :id', { id: booth.id })
+          .getOne();
+
+        if (qrcodeToRemove) {
+          await this.qrCodeRepository.remove(qrcodeToRemove);
         }
 
         const imageBoothToRemove = await this.imageRepository
@@ -229,6 +342,15 @@ export class EventService {
       .where('ticket.eventId = :id', { id })
       .getMany();
 
+    const qrCodeToRemove = await this.qrCodeRepository
+      .createQueryBuilder('qrcode')
+      .where('qrcode.eventId = :id', { id })
+      .getOne();
+
+    if (qrCodeToRemove) {
+      await this.qrCodeRepository.remove(qrCodeToRemove);
+    }
+
     if (imageToRemove.length > 0) {
       imageToRemove.forEach(async (image) => {
         await this.imageRepository.remove(image);
@@ -257,9 +379,10 @@ export class EventService {
   }
 
   async removeImagesByEventId(eventId): Promise<void> {
-    const imagesToRemove = await this.imageRepository.createQueryBuilder('image')
-    .where('image.eventId = :eventId', { eventId })
-    .getMany();
+    const imagesToRemove = await this.imageRepository
+      .createQueryBuilder('image')
+      .where('image.eventId = :eventId', { eventId })
+      .getMany();
     if (!imagesToRemove) {
       throw new NotFoundException(`No images found for event ${eventId}`);
     }
@@ -270,6 +393,5 @@ export class EventService {
       console.error('Error removing images:', error);
       throw new Error('Failed to remove images');
     }
-
   }
-  }
+}

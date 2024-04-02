@@ -10,6 +10,7 @@ import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
 import { Image } from 'src/image/entities/image.entity';
 import { Type } from 'class-transformer';
 import { ImageService } from 'src/image/image.service';
+import { QrCodeService } from 'src/qrcode/qrcode.service';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Booth]),
@@ -20,6 +21,6 @@ import { ImageService } from 'src/image/image.service';
     TypeOrmModule.forFeature([Image]),
   ],
   controllers: [BoothController],
-  providers: [BoothService, ImageService],
+  providers: [BoothService, ImageService, QrCodeService],
 })
 export class BoothModule {}
