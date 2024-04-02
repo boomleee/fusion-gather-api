@@ -4,35 +4,36 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity';
-import { In, Repository } from 'typeorm';
+import { DeepPartial, In, Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { MoreThanOrEqual } from 'typeorm';
-import { Booth } from 'src/booth/entities/booth.entity';
-import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
 import { Image } from 'src/image/entities/image.entity';
 import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
-import { Followevent } from 'src/followevent/entities/followevent.entity';
-import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { request } from 'http';
 import { ImageService } from 'src/image/image.service';
+import { Booth } from 'src/booth/entities/booth.entity';
+import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
+import { Followevent } from 'src/followevent/entities/followevent.entity';
+import { Ticket } from 'src/ticket/entities/ticket.entity';
+import { QrCodeService } from 'src/qrcode/qrcode.service';
 @Injectable()
 export class EventService {
   constructor(
+    @InjectRepository(Image) 
+    private readonly imageRepository: Repository<Image>,
+    private imageService: ImageService,
     @InjectRepository(Event)
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(Booth)
     private readonly boothRepository: Repository<Booth>,
     @InjectRepository(Registerbooth)
     private readonly registerboothRepository: Repository<Registerbooth>,
-    @InjectRepository(Qrcode)
-    private readonly qrcodeRepository: Repository<Qrcode>,
     @InjectRepository(Followevent)
     private readonly followeventRepository: Repository<Followevent>,
     @InjectRepository(Ticket)
     private readonly ticketRepository: Repository<Ticket>,
-    @InjectRepository(Image) 
-    private readonly imageRepository: Repository<Image>,
-    private imageService: ImageService,
+    @InjectRepository(Qrcode) private readonly qrCodeRepository: Repository<Qrcode>,
+    private readonly qrCodeService: QrCodeService,
   ) {}
 
   //check event exist
@@ -43,25 +44,36 @@ export class EventService {
     if (event) return true;
     else return false;
   }
-  async create(createEventDto: CreateEventDto, user: User) { 
-    const isEventTitleExist = await this.checkEventTitleExist(
-      createEventDto.title,
-    );
 
-    if (isEventTitleExist) {
-      throw new NotFoundException(`Title is exist!`);
-    }
-    const {imageUrl, ...dtoWithoutImage } = createEventDto;
-    const event = this.eventRepository.create({...dtoWithoutImage});
-    event.author = user;
-    const newEvent = await this.eventRepository.save(event);
-    for (const image of imageUrl) {
-      console.log("image", image);
-      this.imageService.createImage(image, newEvent.id, null)
-    }
+  async create(createEventDto: CreateEventDto, user: User) {
+    try {
+        const isEventTitleExist = await this.checkEventTitleExist(createEventDto.title);
+        
+        if (isEventTitleExist) {
+            throw new NotFoundException(`Title is exist!`);
+        }
+      
+        const { imageUrl,...dtoWithoutImage } = createEventDto;
+        const event = this.eventRepository.create({
+            ...dtoWithoutImage,
+        } as DeepPartial<Event>);
+        
+        event.author = user;
+        const newEvent = await this.eventRepository.save(event);
 
-    return newEvent
-  }
+        // Lưu các hình ảnh liên quan đến sự kiện
+        for (const image of imageUrl) {
+            await this.imageService.createImage(image, newEvent.id, null);
+        }
+        const qrCodeId = await this.qrCodeService.generateAndSaveQRCode(newEvent.id);
+        console.log("qrCodeId", qrCodeId);
+        return newEvent;
+    } catch (error) {
+        console.error('Error creating event:', error);
+        throw new Error('Internal Server Error');
+    }
+}
+
 
   async findAll({
     userId,
@@ -76,6 +88,7 @@ export class EventService {
     // filter by user
     if (userId) {
       query.andWhere('event.author = :userId', { userId: userId });
+      return query.getMany();
       return query.getMany();
     }
 
@@ -94,9 +107,14 @@ export class EventService {
         categoryId: category,
       });
       query.andWhere('event.isPublished = :isPublished', { isPublished: true });
+      query.andWhere('event.categoryId = :categoryId', {
+        categoryId: category,
+      });
+      query.andWhere('event.isPublished = :isPublished', { isPublished: true });
     }
 
     // pagination
+    query.andWhere('event.isPublished = :isPublished', { isPublished: true });
     query.andWhere('event.isPublished = :isPublished', { isPublished: true });
     query.skip((pageNumber - 1) * pageSize).take(pageSize);
 
@@ -201,6 +219,14 @@ export class EventService {
           });
         }
 
+        const qrcodeToRemove = await this.qrCodeRepository.createQueryBuilder('qrcode')
+          .where('qrcode.boothId = :id', { id: booth.id })
+          .getOne();
+
+        if (qrcodeToRemove) {
+          await this.qrCodeRepository.remove(qrcodeToRemove);
+        }
+
         const imageBoothToRemove = await this.imageRepository
           .createQueryBuilder('image')
           .where('image.boothId = :boothid', {
@@ -228,6 +254,14 @@ export class EventService {
       .createQueryBuilder('ticket')
       .where('ticket.eventId = :id', { id })
       .getMany();
+
+    const qrCodeToRemove = await this.qrCodeRepository.createQueryBuilder('qrcode')
+      .where('qrcode.eventId = :id', { id })
+      .getOne();
+
+    if (qrCodeToRemove) {
+      await this.qrCodeRepository.remove(qrCodeToRemove);
+    }
 
     if (imageToRemove.length > 0) {
       imageToRemove.forEach(async (image) => {

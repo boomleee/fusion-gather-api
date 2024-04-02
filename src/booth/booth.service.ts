@@ -16,8 +16,9 @@ import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
 import { Image } from 'src/image/entities/image.entity';
-import { ImageService } from 'src/image/image.service';
 import e from 'express';
+import { ImageService } from 'src/image/image.service';
+import { QrCodeService } from 'src/qrcode/qrcode.service';
 
 @Injectable()
 export class BoothService {
@@ -28,6 +29,7 @@ export class BoothService {
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(Qrcode)
     private readonly qrcodeRepository: Repository<Qrcode>,
+    private readonly QrCodeService: QrCodeService,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Registerbooth)
     private readonly registerboothRepository: Repository<Registerbooth>,
@@ -98,7 +100,8 @@ export class BoothService {
       for (const image of imageUrl) {
         this.imageService.createBoothImages(image, newBooth.id);
       }
-
+      const qrCode = await this.QrCodeService.generateAndSaveQRCodeForBooth(newBooth.id);
+      console.log(qrCode);
       return newBooth;
 
   }
@@ -181,11 +184,7 @@ export class BoothService {
     }
   }
 
-  async update(
-    userId: number,
-    boothId: number,
-    updateBoothDto: UpdateBoothDto,
-  ): Promise<Booth> {
+  async update(userId: number,boothId: number, updateBoothDto: UpdateBoothDto): Promise<Booth> {
     const isUserExist = await this.checkUserExist(userId);
     const isBoothExist = await this.checkBoothExist(boothId);
 
@@ -286,6 +285,11 @@ export class BoothService {
       .where('image.boothId = :boothId', { boothId })
       .getMany();
 
+    const qrcodeToRemove = await this.qrcodeRepository
+      .createQueryBuilder('qrcode')
+      .where('qrcode.boothId = :boothId', { boothId })
+      .getOne();
+
     if (imageBoothToRemove.length > 0) {
       imageBoothToRemove.forEach(async (image) => {
         await this.imageRepository.remove(image);
@@ -296,6 +300,10 @@ export class BoothService {
       requestedBooth.forEach(async (request) => {
         await this.registerboothRepository.remove(request);
       });
+    }
+
+    if (qrcodeToRemove) {
+      await this.qrcodeRepository.remove(qrcodeToRemove);
     }
 
       if (!boothToRemove) {

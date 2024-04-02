@@ -14,6 +14,7 @@ import { Image } from 'src/image/entities/image.entity';
 import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
 import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { ImageService } from 'src/image/image.service';
+import { QrCodeService } from 'src/qrcode/qrcode.service';
 
 @Module({
   imports: [
@@ -27,6 +28,6 @@ import { ImageService } from 'src/image/image.service';
     TypeOrmModule.forFeature([Ticket]),
   ],
   controllers: [FolloweventController],
-  providers: [FolloweventService, UserService, EventService, ImageService],
+  providers: [FolloweventService, UserService, EventService, ImageService, QrCodeService],
 })
 export class FolloweventModule {}
