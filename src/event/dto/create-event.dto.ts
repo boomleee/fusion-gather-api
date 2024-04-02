@@ -49,4 +49,7 @@ export class CreateEventDto {
   @IsNumber()
   lat: number
 
+  @IsNotEmpty()
+  @IsNumber()
+  qrcodeId: number; // Thêm trường này
 }

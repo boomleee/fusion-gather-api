@@ -2,8 +2,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Event } from 'src/event/entities/event.entity';
 import { Image } from './entities/image.entity';
+import { Event } from 'src/event/entities/event.entity';
+
 import { Booth } from 'src/booth/entities/booth.entity';
 import { UpdateImageUrlsDto } from './dto/update-image.dto';
 @Injectable()
@@ -57,6 +58,7 @@ export class ImageService {
 
     return await this.imageRepository.save(image);
   }
+  
 
   async findImagesByEventId(eventId: number) {
 

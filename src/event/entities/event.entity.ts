@@ -1,13 +1,11 @@
 /* eslint-disable prettier/prettier */
 import { Category } from 'src/category/entities/category.entity';
-import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
 import { User } from 'src/user/entities/user.entity';
 import {
   Column,
   Entity,
   JoinColumn,
   ManyToOne,
-  OneToOne,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 
@@ -30,13 +28,13 @@ export class Event {
   @JoinColumn({ name: 'categoryId' })
   category: Category;
 
-  @OneToOne(() => Qrcode)
-  @JoinColumn({ name: 'qrcodeId' })
-  qrcode: Qrcode;
+  // @OneToOne(() => Qrcode)
+  // @JoinColumn({ name: 'qrcodeId' })
+  // qrcode: Qrcode;
 
   @Column()
   location: string;
-  
+
   @Column()
   startDateTime: string;
 
