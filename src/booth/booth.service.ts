@@ -19,6 +19,7 @@ import { Image } from 'src/image/entities/image.entity';
 import e from 'express';
 import { ImageService } from 'src/image/image.service';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class BoothService {
@@ -35,6 +36,7 @@ export class BoothService {
     private readonly registerboothRepository: Repository<Registerbooth>,
     @InjectRepository(Image) private readonly imageRepository: Repository<Image>,
     private imageService: ImageService,
+    private mailerService: MailerService,
   ) {}
 
   async checkEventExist(eventId: number) {
@@ -242,7 +244,14 @@ export class BoothService {
 
     const existingBooth = await this.boothRepository.createQueryBuilder('booth')
       .innerJoinAndSelect('booth.vendorId', 'user')
+      .innerJoinAndSelect('booth.eventId', 'event')
       .where('booth.id = :boothId', { boothId })
+      .getOne();
+
+    const vendor = await this.registerboothRepository.createQueryBuilder('registerbooth')
+      .innerJoinAndSelect('registerbooth.user', 'user')
+      .andWhere('registerbooth.boothId = :boothId', { boothId })
+      .andWhere('registerbooth.userId = :userId', { userId })
       .getOne();
 
     if (!existingBooth) {
@@ -250,6 +259,16 @@ export class BoothService {
     }
 
     existingBooth.vendorId.id = userId;
+    await this.mailerService.sendMail({
+      to: vendor.user.email,
+      subject: 'Booth Ownership Transfer',
+      html: `
+      <h1>Booth Assignment Notification</h1>
+      <p>Hello, ${vendor.user.firstName} ${vendor.user.lastName}</p>
+      <p>You have been assigned as the owner of booth <strong>${existingBooth.name}</strong> in event <strong>${existingBooth.eventId.title}</strong>.</p>
+      <p>Please login to your account to view the booth details and update it as soon as posible.</p>
+      <p>Thank you!</p>`,
+    });
     return await this.boothRepository.save(existingBooth);
   }
 
