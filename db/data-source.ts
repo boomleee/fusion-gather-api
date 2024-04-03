@@ -1,5 +1,5 @@
 import { DataSource, DataSourceOptions } from 'typeorm';
-
+require('dotenv').config();
 // export const dataSourceOptions: DataSourceOptions = {
 //   type: 'mysql',
 //   host: 'localhost',
@@ -14,11 +14,11 @@ import { DataSource, DataSourceOptions } from 'typeorm';
 
 export const dataSourceOptions: DataSourceOptions = {
   type: 'mysql',
-  host: '34.81.139.152',
+  host: process.env.DB_HOST,
   port: 3306,
-  username: 'root',
-  password: 'fusiongathernewgen4346134243',
-  database: 'fusiongather',
+  username: process.env.DB_USERNAME,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME,
   entities: ['dist/**/*.entity{.ts,.js}'],
   migrations: ['dist/db/migrations/*.js'],
   synchronize: false,
