@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,6 +14,7 @@ import { ImageService } from 'src/image/image.service';
 import { Booth } from 'src/booth/entities/booth.entity';
 import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
 import { Followevent } from 'src/followevent/entities/followevent.entity';
+import { Category } from 'src/category/entities/category.entity';
 import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
 import { MailerService } from '@nestjs-modules/mailer';
@@ -36,6 +37,8 @@ export class EventService {
     @InjectRepository(Qrcode)
     private readonly qrCodeRepository: Repository<Qrcode>,
     private readonly qrCodeService: QrCodeService,
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
     private MailerService: MailerService,
   ) {}
 
@@ -53,10 +56,77 @@ export class EventService {
       const isEventTitleExist = await this.checkEventTitleExist(
         createEventDto.title,
       );
+      
+      const category = await this.categoryRepository.findOne({
+        where: { id: createEventDto.category },
+      });
+
+      if (!category) {
+        throw new NotFoundException(`Category is not exist!`);
+      }
+      if (createEventDto.title === ""|| createEventDto.title === null) {
+        throw new NotAcceptableException(`Title is blank or null`);
+      }
 
       if (isEventTitleExist) {
-        throw new NotFoundException(`Title is exist!`);
+        throw new NotAcceptableException(`Title is exist!`);
       }
+
+      if (createEventDto.category === null) {
+        throw new NotAcceptableException(`Category is blank`);
+      }
+
+      if (createEventDto.description === "") {
+        throw new NotAcceptableException(`Description is blank`);
+      }
+
+      if (createEventDto.startDateTime === "") {
+        throw new NotAcceptableException(`Start date time is blank`);
+      }
+
+      if (createEventDto.endDateTime === "") {
+        throw new NotAcceptableException(`End date time is blank`);
+      }
+
+      if (createEventDto.startDateTime > createEventDto.endDateTime) {
+        throw new NotAcceptableException(`Start date time must be before end date time`);
+      }
+
+      if (createEventDto.endDateTime < createEventDto.startDateTime) {
+        throw new NotAcceptableException(`End date time must be after start date time`);
+      }
+      if (createEventDto.location === "") {
+        throw new NotAcceptableException(`Location is blank`);
+      }
+
+      if (createEventDto.lat === null || createEventDto.lng === null) {
+        throw new NotAcceptableException(`Location is invalid`);
+      }
+
+      if (createEventDto.lat < -90 || createEventDto.lat > 90) {
+        throw new NotAcceptableException(`Latitude must be between -90 and 90`);
+      }
+
+      if (createEventDto.lng < -180 || createEventDto.lng > 180) {
+        throw new NotAcceptableException(`Longitude must be between -180 and 180`);
+      }
+
+      if (createEventDto.isFree === null) {
+        throw new NotAcceptableException(`Is free is blank`);
+      }
+
+      if (createEventDto.isFree === false && createEventDto.price === "") {
+        throw new NotAcceptableException(`Price of paid event is blank`);
+      }
+
+      if (createEventDto.isFree === true && createEventDto.price !== "") {
+        throw new NotAcceptableException(`Price of free event is not blank`);
+      }
+
+      if (Number(createEventDto.price) < 0){
+        throw new NotAcceptableException(`Price must be greater than 0`);
+      }
+
 
       const { imageUrl, ...dtoWithoutImage } = createEventDto;
       const event = this.eventRepository.create({
@@ -249,6 +319,73 @@ export class EventService {
     if (!existingEvent) {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
+    
+    const category = await this.categoryRepository.findOne({
+      where: { id: updateEventDto.category },
+    });
+
+    if (!category) {
+      throw new NotFoundException(`Category is not exist!`);
+    }
+    if (updateEventDto.title === ""|| updateEventDto.title === null) {
+      throw new NotAcceptableException(`Title is blank or null`);
+    }
+
+    if (updateEventDto.category === null) {
+      throw new NotAcceptableException(`Category is blank`);
+    }
+
+    if (updateEventDto.description === "") {
+      throw new NotAcceptableException(`Description is blank`);
+    }
+
+    if (updateEventDto.startDateTime === "") {
+      throw new NotAcceptableException(`Start date time is blank`);
+    }
+
+    if (updateEventDto.endDateTime === "") {
+      throw new NotAcceptableException(`End date time is blank`);
+    }
+
+    if (updateEventDto.startDateTime > updateEventDto.endDateTime) {
+      throw new NotAcceptableException(`Start date time must be before end date time`);
+    }
+
+    if (updateEventDto.endDateTime < updateEventDto.startDateTime) {
+      throw new NotAcceptableException(`End date time must be after start date time`);
+    }
+    if (updateEventDto.location === "") {
+      throw new NotAcceptableException(`Location is blank`);
+    }
+
+    if (updateEventDto.lat === null || updateEventDto.lng === null) {
+      throw new NotAcceptableException(`Location is invalid`);
+    }
+
+    if (updateEventDto.lat < -90 || updateEventDto.lat > 90) {
+      throw new NotAcceptableException(`Latitude must be between -90 and 90`);
+    }
+
+    if (updateEventDto.lng < -180 || updateEventDto.lng > 180) {
+      throw new NotAcceptableException(`Longitude must be between -180 and 180`);
+    }
+
+    if (updateEventDto.isFree === null) {
+      throw new NotAcceptableException(`Is free is blank`);
+    }
+
+    if (updateEventDto.isFree === false && (updateEventDto.price === null || updateEventDto.price === "") ) {
+      throw new NotAcceptableException(`Price of paid event is blank`);
+    }
+
+    if (updateEventDto.isFree === true && updateEventDto.price !== "") {
+      throw new NotAcceptableException(`Price of free event is not blank`);
+    }
+
+    if (Number(updateEventDto.price) < 0){
+      throw new NotAcceptableException(`Price must be greater than 0`);
+    }
+
     const { imageUrl, ...dtoWithoutImage } = updateEventDto;
     if (imageUrl) {
       await this.removeImagesByEventId(id);

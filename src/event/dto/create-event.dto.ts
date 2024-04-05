@@ -12,7 +12,7 @@ export class CreateEventDto {
 
   @IsNotEmpty()
   @IsNumber()
-  categoryId: number;
+  category: number;
 
   @IsNotEmpty()
   @IsNumber()

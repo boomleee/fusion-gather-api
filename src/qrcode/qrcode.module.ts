@@ -15,6 +15,7 @@ import { Followevent } from 'src/followevent/entities/followevent.entity';
 import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { UserService } from 'src/user/user.service';
 import { FolloweventService } from 'src/followevent/followevent.service';
+import { Category } from 'src/category/entities/category.entity';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { FolloweventService } from 'src/followevent/followevent.service';
     TypeOrmModule.forFeature([Image]),
     TypeOrmModule.forFeature([Qrcode]),
     TypeOrmModule.forFeature([Ticket]),
+    TypeOrmModule.forFeature([Category]),
   ],
   controllers: [QrCodeController],
   providers: [QrCodeService, FolloweventService, UserService, EventService, ImageService],

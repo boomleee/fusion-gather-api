@@ -15,6 +15,8 @@ import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
 import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { ImageService } from 'src/image/image.service';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
+import { Type } from 'class-transformer';
+import { Category } from 'src/category/entities/category.entity';
 
 @Module({
   imports: [
@@ -26,6 +28,7 @@ import { QrCodeService } from 'src/qrcode/qrcode.service';
     TypeOrmModule.forFeature([Image]),
     TypeOrmModule.forFeature([Qrcode]),
     TypeOrmModule.forFeature([Ticket]),
+    TypeOrmModule.forFeature([Category]),
   ],
   controllers: [FolloweventController],
   providers: [FolloweventService, UserService, EventService, ImageService, QrCodeService],
