@@ -13,6 +13,7 @@ import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
 import { Followevent } from 'src/followevent/entities/followevent.entity';
 import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
+import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
 @Injectable()
 export class EventService {
   constructor(
@@ -30,6 +31,8 @@ export class EventService {
     @InjectRepository(Ticket)
     private readonly ticketRepository: Repository<Ticket>,
     private readonly qrCodeService: QrCodeService,
+    @InjectRepository(Qrcode)
+    private readonly QrcodeRepository: Repository<Qrcode>,
   ) {}
   //check event exist
   async checkEventTitleExist(title: string) {
@@ -39,26 +42,6 @@ export class EventService {
     if (event) return true;
     else return false;
   }
-
-  // async create(createEventDto: CreateEventDto, user: User) {
-  //   const isEventTitleExist = await this.checkEventTitleExist(createEventDto.title);
-  
-  //   if (isEventTitleExist) {
-  //     throw new NotFoundException(`Title is exist!`);
-  //   }
-  
-  //   const { imageUrl, ...dtoWithoutImage } = createEventDto;
-  //   const event = this.eventRepository.create({ ...dtoWithoutImage, qrcodeId: createEventDto.qrcodeId } as DeepPartial<Event>);
-  //   console.log("qrCode", event);
-  //   event.author = user;
-  //   const newEvent = await this.eventRepository.save(event);
-  //   for (const image of imageUrl) {
-  //     console.log("image", image);
-  //     await this.imageService.createImage(image, newEvent.id, null);
-  //   }
-  
-  //   return newEvent;
-  // }
 
   async create(createEventDto: CreateEventDto, user: User) {
     try {
@@ -230,6 +213,11 @@ export class EventService {
       .createQueryBuilder('ticket')
       .where('ticket.eventId = :id', { id })
       .getMany();
+    
+    const qrCodeToRemove = await this.QrcodeRepository
+      .createQueryBuilder('qrcode')
+      .where('qrcode.eventId = :id', { id })
+      .getOne();
 
     if (imageToRemove.length > 0) {
       imageToRemove.forEach(async (image) => {
@@ -254,6 +242,11 @@ export class EventService {
         await this.boothRepository.remove(booth);
       });
     }
+
+    if (qrCodeToRemove != null) {
+        await this.QrcodeRepository.remove(qrCodeToRemove);
+      }
+  
 
     await this.eventRepository.remove(eventToRemove);
   }
@@ -280,4 +273,6 @@ export class EventService {
     query.andWhere('event.isPublished = :isPublished', { isPublished: true });
     return query.getMany();
   }
-  }
+
+}
+  

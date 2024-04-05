@@ -1,0 +1,37 @@
+/* eslint-disable prettier/prettier */
+import { Module } from '@nestjs/common';
+import { PaymentService } from './payment.service';
+import { PaymentController } from './payment.controller';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Event } from 'src/event/entities/event.entity';
+import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
+import { EventService } from 'src/event/event.service';
+import { Image } from 'src/image/entities/image.entity';
+import { ImageService } from 'src/image/image.service';
+import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
+import { Booth } from 'src/booth/entities/booth.entity';
+import { User } from 'src/user/entities/user.entity';
+import { Followevent } from 'src/followevent/entities/followevent.entity';
+import { Ticket } from 'src/ticket/entities/ticket.entity';
+import { UserService } from 'src/user/user.service';
+import { FolloweventService } from 'src/followevent/followevent.service';
+import { QrCodeService } from 'src/qrcode/qrcode.service';
+import { Payment } from './entities/payment.entity';
+import { TicketService } from 'src/ticket/ticket.service';
+
+@Module({
+  imports: [
+    TypeOrmModule.forFeature([Followevent]),
+    TypeOrmModule.forFeature([User]),
+    TypeOrmModule.forFeature([Event]),
+    TypeOrmModule.forFeature([Booth]),
+    TypeOrmModule.forFeature([Registerbooth]),
+    TypeOrmModule.forFeature([Image]),
+    TypeOrmModule.forFeature([Qrcode]),
+    TypeOrmModule.forFeature([Ticket]),
+    TypeOrmModule.forFeature([Payment]),
+  ],
+  controllers: [PaymentController],
+  providers: [PaymentService, EventService, ImageService, UserService, FolloweventService,QrCodeService, TicketService]
+})
+export class PaymentModule {}

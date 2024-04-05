@@ -28,10 +28,6 @@ export class Event {
   @JoinColumn({ name: 'categoryId' })
   category: Category;
 
-  // @OneToOne(() => Qrcode)
-  // @JoinColumn({ name: 'qrcodeId' })
-  // qrcode: Qrcode;
-
   @Column()
   location: string;
 
