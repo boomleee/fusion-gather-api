@@ -19,6 +19,7 @@ import { Image } from 'src/image/entities/image.entity';
 import e from 'express';
 import { ImageService } from 'src/image/image.service';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class BoothService {
@@ -33,8 +34,10 @@ export class BoothService {
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Registerbooth)
     private readonly registerboothRepository: Repository<Registerbooth>,
-    @InjectRepository(Image) private readonly imageRepository: Repository<Image>,
+    @InjectRepository(Image)
+    private readonly imageRepository: Repository<Image>,
     private imageService: ImageService,
+    private mailerService: MailerService,
   ) {}
 
   async checkEventExist(eventId: number) {
@@ -90,20 +93,21 @@ export class BoothService {
 
     const { imageUrl, ...dtoWithoutImage } = createBoothDto;
 
-      const booth = this.boothRepository.create({
-        ...dtoWithoutImage,
-        eventId: event,
-        vendorId: user,
-      });
+    const booth = this.boothRepository.create({
+      ...dtoWithoutImage,
+      eventId: event,
+      vendorId: user,
+    });
 
-      const newBooth = await this.boothRepository.save(booth);
-      for (const image of imageUrl) {
-        this.imageService.createBoothImages(image, newBooth.id);
-      }
-      const qrCode = await this.QrCodeService.generateAndSaveQRCodeForBooth(newBooth.id);
-      console.log(qrCode);
-      return newBooth;
-
+    const newBooth = await this.boothRepository.save(booth);
+    for (const image of imageUrl) {
+      this.imageService.createBoothImages(image, newBooth.id);
+    }
+    const qrCode = await this.QrCodeService.generateAndSaveQRCodeForBooth(
+      newBooth.id,
+    );
+    console.log(qrCode);
+    return newBooth;
   }
 
   async findAll(): Promise<Booth[]> {
@@ -169,7 +173,8 @@ export class BoothService {
   }
 
   async removeImagesByBoothId(boothId: number) {
-    const images = await this.imageRepository.createQueryBuilder('image')
+    const images = await this.imageRepository
+      .createQueryBuilder('image')
       .where('image.boothId = :boothId', { boothId })
       .getMany();
 
@@ -184,7 +189,11 @@ export class BoothService {
     }
   }
 
-  async update(userId: number,boothId: number, updateBoothDto: UpdateBoothDto): Promise<Booth> {
+  async update(
+    userId: number,
+    boothId: number,
+    updateBoothDto: UpdateBoothDto,
+  ): Promise<Booth> {
     const isUserExist = await this.checkUserExist(userId);
     const isBoothExist = await this.checkBoothExist(boothId);
 
@@ -235,14 +244,21 @@ export class BoothService {
 
     const isBoothAuthor = await this.checkBoothAuthor(boothId, userId);
     if (isBoothAuthor) {
-      throw new ConflictException(
-        'You are already the owner of this booth',
-      );
+      throw new ConflictException('You are already the owner of this booth');
     }
 
-    const existingBooth = await this.boothRepository.createQueryBuilder('booth')
+    const existingBooth = await this.boothRepository
+      .createQueryBuilder('booth')
       .innerJoinAndSelect('booth.vendorId', 'user')
+      .innerJoinAndSelect('booth.eventId', 'event')
       .where('booth.id = :boothId', { boothId })
+      .getOne();
+
+    const vendor = await this.registerboothRepository
+      .createQueryBuilder('registerbooth')
+      .innerJoinAndSelect('registerbooth.user', 'user')
+      .andWhere('registerbooth.boothId = :boothId', { boothId })
+      .andWhere('registerbooth.userId = :userId', { userId })
       .getOne();
 
     if (!existingBooth) {
@@ -250,6 +266,16 @@ export class BoothService {
     }
 
     existingBooth.vendorId.id = userId;
+    await this.mailerService.sendMail({
+      to: vendor.user.email,
+      subject: 'Booth Ownership Transfer',
+      html: `
+      <h1>Booth Assignment Notification</h1>
+      <p>Hello, ${vendor.user.firstName} ${vendor.user.lastName}</p>
+      <p>You have been assigned as the owner of booth <strong>${existingBooth.name}</strong> in event <strong>${existingBooth.eventId.title}</strong>.</p>
+      <p>Please login to your account to view the booth details and update it as soon as posible.</p>
+      <p>Thank you!</p>`,
+    });
     return await this.boothRepository.save(existingBooth);
   }
 
@@ -264,21 +290,27 @@ export class BoothService {
     if (!isBoothExist) {
       throw new NotFoundException(`Booth ${boothId} not exist`);
     }
-    const isBoothAuthor = await this.checkBoothAuthor(boothId, userId);
-    if (!isBoothAuthor) {
-      throw new ForbiddenException(
-        'You dont have permission to delete this booth',
-      );
-    }
+
     const boothToRemove = await this.boothRepository
       .createQueryBuilder('booth')
       .where('booth.id = :boothId', { boothId })
       .getOne();
 
+    if (!boothToRemove) {
+      throw new NotFoundException(`Booth with ID ${boothId} not found`);
+    }
+
     const requestedBooth = await this.registerboothRepository
       .createQueryBuilder('registerbooth')
       .where('registerbooth.boothId = :boothId', { boothId })
       .getMany();
+
+    if (requestedBooth.length > 0) {
+      await Promise.all(requestedBooth.map(async (request) => {
+        await this.registerboothRepository.remove(request);
+    }
+    ));
+    }
 
     const imageBoothToRemove = await this.imageRepository
       .createQueryBuilder('image')
@@ -294,23 +326,12 @@ export class BoothService {
       imageBoothToRemove.forEach(async (image) => {
         await this.imageRepository.remove(image);
       });
-    }  
-
-    if (requestedBooth.length > 0) {
-      requestedBooth.forEach(async (request) => {
-        await this.registerboothRepository.remove(request);
-      });
     }
 
     if (qrcodeToRemove) {
       await this.qrcodeRepository.remove(qrcodeToRemove);
     }
-
-      if (!boothToRemove) {
-        throw new NotFoundException(`Booth with ID ${boothId} not found`);
-      }
-
-      await this.boothRepository.remove(boothToRemove);
-      console.log(`Booth with ID ${boothId} has been deleted successfully.`);
+    await this.boothRepository.remove(boothToRemove);
+    console.log(`Booth with ID ${boothId} has been deleted successfully.`);
   }
 }

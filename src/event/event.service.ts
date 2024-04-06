@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,12 +14,14 @@ import { ImageService } from 'src/image/image.service';
 import { Booth } from 'src/booth/entities/booth.entity';
 import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
 import { Followevent } from 'src/followevent/entities/followevent.entity';
+import { Category } from 'src/category/entities/category.entity';
 import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
+import { MailerService } from '@nestjs-modules/mailer';
 @Injectable()
 export class EventService {
   constructor(
-    @InjectRepository(Image) 
+    @InjectRepository(Image)
     private readonly imageRepository: Repository<Image>,
     private imageService: ImageService,
     @InjectRepository(Event)
@@ -32,8 +34,12 @@ export class EventService {
     private readonly followeventRepository: Repository<Followevent>,
     @InjectRepository(Ticket)
     private readonly ticketRepository: Repository<Ticket>,
-    @InjectRepository(Qrcode) private readonly qrCodeRepository: Repository<Qrcode>,
+    @InjectRepository(Qrcode)
+    private readonly qrCodeRepository: Repository<Qrcode>,
     private readonly qrCodeService: QrCodeService,
+    @InjectRepository(Category)
+    private readonly categoryRepository: Repository<Category>,
+    private MailerService: MailerService,
   ) {}
 
   //check event exist
@@ -47,33 +53,103 @@ export class EventService {
 
   async create(createEventDto: CreateEventDto, user: User) {
     try {
-        const isEventTitleExist = await this.checkEventTitleExist(createEventDto.title);
-        
-        if (isEventTitleExist) {
-            throw new NotFoundException(`Title is exist!`);
-        }
+      const isEventTitleExist = await this.checkEventTitleExist(
+        createEventDto.title,
+      );
       
-        const { imageUrl,...dtoWithoutImage } = createEventDto;
-        const event = this.eventRepository.create({
-            ...dtoWithoutImage,
-        } as DeepPartial<Event>);
-        
-        event.author = user;
-        const newEvent = await this.eventRepository.save(event);
+      const category = await this.categoryRepository.findOne({
+        where: { id: createEventDto.category },
+      });
 
-        // Lưu các hình ảnh liên quan đến sự kiện
-        for (const image of imageUrl) {
-            await this.imageService.createImage(image, newEvent.id, null);
-        }
-        const qrCodeId = await this.qrCodeService.generateAndSaveQRCode(newEvent.id);
-        console.log("qrCodeId", qrCodeId);
-        return newEvent;
+      if (!category) {
+        throw new NotFoundException(`Category is not exist!`);
+      }
+      if (createEventDto.title === ""|| createEventDto.title === null) {
+        throw new NotAcceptableException(`Title is blank or null`);
+      }
+
+      if (isEventTitleExist) {
+        throw new NotAcceptableException(`Title is exist!`);
+      }
+
+      if (createEventDto.category === null) {
+        throw new NotAcceptableException(`Category is blank`);
+      }
+
+      if (createEventDto.description === "") {
+        throw new NotAcceptableException(`Description is blank`);
+      }
+
+      if (createEventDto.startDateTime === "") {
+        throw new NotAcceptableException(`Start date time is blank`);
+      }
+
+      if (createEventDto.endDateTime === "") {
+        throw new NotAcceptableException(`End date time is blank`);
+      }
+
+      if (createEventDto.startDateTime > createEventDto.endDateTime) {
+        throw new NotAcceptableException(`Start date time must be before end date time`);
+      }
+
+      if (createEventDto.endDateTime < createEventDto.startDateTime) {
+        throw new NotAcceptableException(`End date time must be after start date time`);
+      }
+      if (createEventDto.location === "") {
+        throw new NotAcceptableException(`Location is blank`);
+      }
+
+      if (createEventDto.lat === null || createEventDto.lng === null) {
+        throw new NotAcceptableException(`Location is invalid`);
+      }
+
+      if (createEventDto.lat < -90 || createEventDto.lat > 90) {
+        throw new NotAcceptableException(`Latitude must be between -90 and 90`);
+      }
+
+      if (createEventDto.lng < -180 || createEventDto.lng > 180) {
+        throw new NotAcceptableException(`Longitude must be between -180 and 180`);
+      }
+
+      if (createEventDto.isFree === null) {
+        throw new NotAcceptableException(`Is free is blank`);
+      }
+
+      if (createEventDto.isFree === false && createEventDto.price === "") {
+        throw new NotAcceptableException(`Price of paid event is blank`);
+      }
+
+      if (createEventDto.isFree === true && createEventDto.price !== "") {
+        throw new NotAcceptableException(`Price of free event is not blank`);
+      }
+
+      if (Number(createEventDto.price) < 0){
+        throw new NotAcceptableException(`Price must be greater than 0`);
+      }
+
+
+      const { imageUrl, ...dtoWithoutImage } = createEventDto;
+      const event = this.eventRepository.create({
+        ...dtoWithoutImage,
+      } as DeepPartial<Event>);
+
+      event.author = user;
+      const newEvent = await this.eventRepository.save(event);
+
+      // Lưu các hình ảnh liên quan đến sự kiện
+      for (const image of imageUrl) {
+        await this.imageService.createImage(image, newEvent.id, null);
+      }
+      const qrCodeId = await this.qrCodeService.generateAndSaveQRCode(
+        newEvent.id,
+      );
+      console.log('qrCodeId', qrCodeId);
+      return newEvent;
     } catch (error) {
-        console.error('Error creating event:', error);
-        throw new Error('Internal Server Error');
+      console.error('Error creating event:', error);
+      throw new Error('Internal Server Error');
     }
-}
-
+  }
 
   async findAll({
     userId,
@@ -153,11 +229,65 @@ export class EventService {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
 
-    if(!existingEvent.isPublished) {
+    const follower = await this.followeventRepository
+      .createQueryBuilder('followevent')
+      .innerJoinAndSelect('followevent.user', 'user')
+      .where('followevent.eventId = :id', { id })
+      .getMany();
+
+      const vendorRequest = await this.registerboothRepository.createQueryBuilder('registerbooth')
+      .leftJoinAndSelect('registerbooth.user', 'user')
+      .leftJoinAndSelect('registerbooth.booth', 'booth')
+      .where('booth.eventId = :id', { id })
+      .getMany();
+
+      const uniqueUsers = new Map<number, User>();
+      vendorRequest.forEach(request => {
+        uniqueUsers.set(request.user.id, request.user);
+    });
+
+    if (!existingEvent.isPublished) {
       existingEvent.isPublished = true;
-    } else {
-      existingEvent.isPublished = false;
+    } 
+
+    if (existingEvent.isPublished) {
+      if (follower.length > 0) {
+      follower.forEach(async (follow) => {
+        await this.MailerService.sendMail({
+          to: follow.user.email,
+          subject: 'Event Published',
+          html: `<head>
+        <title>Event Published Notification</title>
+      </head>
+      <body>
+        <h1>Event Published Notification</h1>
+        <p>Hello, ${follow.user.firstName} ${follow.user.lastName}</p>
+        <p>Your following event <strong>${existingEvent.title}</strong> has been published. Click <a href="https://fusiongather.me/event/${existingEvent.id}">here</a> now to register yourself to be an attendee.</p>
+        <p>Thank you!</p>
+      </body>`,
+        });
+      });
+      }
     }
+    if (vendorRequest.length > 0) {
+      vendorRequest.forEach(async (request) => {
+        await this.MailerService.sendMail({
+          to: request.user.email,
+          subject: 'Event Published',
+          html: `<head>
+        <title>Event Published Notification</title>
+      </head>
+      <body>
+        <h1>Event Published Notification</h1>
+        <p>Hello, ${request.user.firstName} ${request.user.lastName}</p>
+        <p> Event <strong>${existingEvent.title}</strong> that you have request booth has been published. Check your email box to know if your request have been approved or not.</p>
+        <p>Thank you!</p>
+      </body>`,
+        });
+        await this.registerboothRepository.remove(request);
+      });
+    }
+
     return await this.eventRepository.save(existingEvent);
   }
 
@@ -179,21 +309,114 @@ export class EventService {
 
   async update(id: number, updateEventDto: UpdateEventDto): Promise<Event> {
     const existingEvent = await this.eventRepository.findOne({ where: { id } });
-  
+
+    const follower = await this.followeventRepository
+      .createQueryBuilder('followevent')
+      .innerJoinAndSelect('followevent.user', 'user')
+      .where('followevent.eventId = :id', { id })
+      .getMany();
+
     if (!existingEvent) {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
-    const {imageUrl, ...dtoWithoutImage } = updateEventDto;
+    
+    const category = await this.categoryRepository.findOne({
+      where: { id: updateEventDto.category },
+    });
+
+    if (!category) {
+      throw new NotFoundException(`Category is not exist!`);
+    }
+    if (updateEventDto.title === ""|| updateEventDto.title === null) {
+      throw new NotAcceptableException(`Title is blank or null`);
+    }
+
+    if (updateEventDto.category === null) {
+      throw new NotAcceptableException(`Category is blank`);
+    }
+
+    if (updateEventDto.description === "") {
+      throw new NotAcceptableException(`Description is blank`);
+    }
+
+    if (updateEventDto.startDateTime === "") {
+      throw new NotAcceptableException(`Start date time is blank`);
+    }
+
+    if (updateEventDto.endDateTime === "") {
+      throw new NotAcceptableException(`End date time is blank`);
+    }
+
+    if (updateEventDto.startDateTime > updateEventDto.endDateTime) {
+      throw new NotAcceptableException(`Start date time must be before end date time`);
+    }
+
+    if (updateEventDto.endDateTime < updateEventDto.startDateTime) {
+      throw new NotAcceptableException(`End date time must be after start date time`);
+    }
+    if (updateEventDto.location === "") {
+      throw new NotAcceptableException(`Location is blank`);
+    }
+
+    if (updateEventDto.lat === null || updateEventDto.lng === null) {
+      throw new NotAcceptableException(`Location is invalid`);
+    }
+
+    if (updateEventDto.lat < -90 || updateEventDto.lat > 90) {
+      throw new NotAcceptableException(`Latitude must be between -90 and 90`);
+    }
+
+    if (updateEventDto.lng < -180 || updateEventDto.lng > 180) {
+      throw new NotAcceptableException(`Longitude must be between -180 and 180`);
+    }
+
+    if (updateEventDto.isFree === null) {
+      throw new NotAcceptableException(`Is free is blank`);
+    }
+
+    if (updateEventDto.isFree === false && (updateEventDto.price === null || updateEventDto.price === "") ) {
+      throw new NotAcceptableException(`Price of paid event is blank`);
+    }
+
+    if (updateEventDto.isFree === true && updateEventDto.price !== "") {
+      throw new NotAcceptableException(`Price of free event is not blank`);
+    }
+
+    if (Number(updateEventDto.price) < 0){
+      throw new NotAcceptableException(`Price must be greater than 0`);
+    }
+
+    const { imageUrl, ...dtoWithoutImage } = updateEventDto;
     if (imageUrl) {
       await this.removeImagesByEventId(id);
-    for (const image of imageUrl) {
-      this.imageService.createImage(image, id, null)
-    }
+      for (const image of imageUrl) {
+        this.imageService.createImage(image, id, null);
+      }
     }
     Object.assign(existingEvent, dtoWithoutImage);
+
+    if (existingEvent.isPublished) {
+      if (follower.length > 0) {
+        follower.forEach(async (follow) => {
+          await this.MailerService.sendMail({
+            to: follow.user.email,
+            subject: 'Event Updated',
+            html: `<head>
+        <title>Event Updated Notification</title>
+      </head>
+      <body>
+        <h1>Event Updated Notification</h1>
+        <p>Hello, ${follow.user.firstName} ${follow.user.lastName}</p>
+        <p>Your following event <strong>${existingEvent.title}</strong> has been updated. Click <a href="https://fusiongather.me/event/${existingEvent.id}">here</a> now to view detail and register yourself to be an attendee.</p>
+        <p>Thank you!</p>
+      </body>`,
+          });
+        });
+      }
+    }
     return await this.eventRepository.save(existingEvent);
   }
-  
+
   async remove(id: number): Promise<void> {
     const eventToRemove = await this.eventRepository.findOne({ where: { id } });
 
@@ -219,7 +442,8 @@ export class EventService {
           });
         }
 
-        const qrcodeToRemove = await this.qrCodeRepository.createQueryBuilder('qrcode')
+        const qrcodeToRemove = await this.qrCodeRepository
+          .createQueryBuilder('qrcode')
           .where('qrcode.boothId = :id', { id: booth.id })
           .getOne();
 
@@ -255,7 +479,8 @@ export class EventService {
       .where('ticket.eventId = :id', { id })
       .getMany();
 
-    const qrCodeToRemove = await this.qrCodeRepository.createQueryBuilder('qrcode')
+    const qrCodeToRemove = await this.qrCodeRepository
+      .createQueryBuilder('qrcode')
       .where('qrcode.eventId = :id', { id })
       .getOne();
 
@@ -291,9 +516,10 @@ export class EventService {
   }
 
   async removeImagesByEventId(eventId): Promise<void> {
-    const imagesToRemove = await this.imageRepository.createQueryBuilder('image')
-    .where('image.eventId = :eventId', { eventId })
-    .getMany();
+    const imagesToRemove = await this.imageRepository
+      .createQueryBuilder('image')
+      .where('image.eventId = :eventId', { eventId })
+      .getMany();
     if (!imagesToRemove) {
       throw new NotFoundException(`No images found for event ${eventId}`);
     }
@@ -304,6 +530,5 @@ export class EventService {
       console.error('Error removing images:', error);
       throw new Error('Failed to remove images');
     }
-
   }
-  }
+}
