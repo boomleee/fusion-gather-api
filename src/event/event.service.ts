@@ -151,6 +151,14 @@ export class EventService {
     }
   }
 
+  async checkUserExist(userId: number) {
+    const user = await this.eventRepository.findOne({
+      where: { id: userId },
+    });
+    if (user) return true;
+    else return false;
+  }
+
   async findAll({
     userId,
     searchString,
@@ -163,8 +171,11 @@ export class EventService {
       .innerJoinAndSelect('event.author', 'user');
     // filter by user
     if (userId) {
+      const isUserExist = await this.checkUserExist(userId);
+      if (!isUserExist) {
+        throw new NotFoundException(`User with ID ${userId} not found`);
+      }
       query.andWhere('event.author = :userId', { userId: userId });
-      return query.getMany();
       return query.getMany();
     }
 
@@ -227,6 +238,10 @@ export class EventService {
 
     if (!existingEvent) {
       throw new NotFoundException(`Event with ID ${id} not found`);
+    }
+
+    if (existingEvent.isPublished) {
+      throw new NotAcceptableException(`Event is already published`);
     }
 
     const follower = await this.followeventRepository

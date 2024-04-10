@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadGatewayException, BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { UserService } from 'src/user/user.service';
 import { RegisterDto } from './dto/register.dto';
@@ -118,6 +118,10 @@ export class AccountService {
   }
 
   async disableAccount(id: number): Promise<Account> {
+
+    if (id === null) {
+      throw new BadRequestException(`Account ID is required`);
+    }
     const existingAccount = await this.accountRepository.findOne({
       where: { id },
     });
@@ -127,7 +131,7 @@ export class AccountService {
     }
 
     if (existingAccount.isActivated === false) {
-      throw new NotFoundException(`Account with ID ${id} is already disabled`);
+      throw new BadRequestException(`Account with ID ${id} is already disabled`);
     }
 
     existingAccount.isActivated = false;
