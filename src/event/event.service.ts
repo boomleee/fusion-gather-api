@@ -4,12 +4,11 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity';
-import { DeepPartial, In, Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { MoreThanOrEqual } from 'typeorm';
 import { Image } from 'src/image/entities/image.entity';
 import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
-import { request } from 'http';
 import { ImageService } from 'src/image/image.service';
 import { Booth } from 'src/booth/entities/booth.entity';
 import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
@@ -136,7 +135,6 @@ export class EventService {
       event.author = user;
       const newEvent = await this.eventRepository.save(event);
 
-      // Lưu các hình ảnh liên quan đến sự kiện
       for (const image of imageUrl) {
         await this.imageService.createImage(image, newEvent.id, null);
       }

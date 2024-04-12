@@ -17,6 +17,7 @@ import { QrcodeModule } from './qrcode/qrcode.module';
 import { ImageModule } from './image/image.module';
 import { FolloweventModule } from './followevent/followevent.module';
 import { RegisterboothModule } from './registerbooth/registerbooth.module';
+import { PaymentModule } from './payment/payment.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { RegisterboothModule } from './registerbooth/registerbooth.module';
     ImageModule,
     FolloweventModule,
     RegisterboothModule,
+    PaymentModule
   ],
   controllers: [AppController],
   providers: [AppService],

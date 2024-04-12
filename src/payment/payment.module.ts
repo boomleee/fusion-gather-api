@@ -1,23 +1,24 @@
 /* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
-import { EventService } from './event.service';
-import { EventController } from './event.controller';
-import { Event } from './entities/event.entity';
+import { PaymentService } from './payment.service';
+import { PaymentController } from './payment.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserService } from 'src/user/user.service';
-import { User } from 'src/user/entities/user.entity';
-import { Category } from 'src/category/entities/category.entity';
-import { Image } from 'src/image/entities/image.entity';
+import { Event } from 'src/event/entities/event.entity';
 import { Qrcode } from 'src/qrcode/entities/qrcode.entity';
+import { EventService } from 'src/event/event.service';
+import { Image } from 'src/image/entities/image.entity';
+import { ImageService } from 'src/image/image.service';
 import { Registerbooth } from 'src/registerbooth/entities/registerbooth.entity';
 import { Booth } from 'src/booth/entities/booth.entity';
+import { User } from 'src/user/entities/user.entity';
 import { Followevent } from 'src/followevent/entities/followevent.entity';
 import { Ticket } from 'src/ticket/entities/ticket.entity';
-import { ImageService } from 'src/image/image.service';
+import { UserService } from 'src/user/user.service';
+import { FolloweventService } from 'src/followevent/followevent.service';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
-import { Payment } from 'src/payment/entities/payment.entity';
-import { PaymentService } from 'src/payment/payment.service';
+import { Payment } from './entities/payment.entity';
 import { TicketService } from 'src/ticket/ticket.service';
+import { Category } from 'src/category/entities/category.entity';
 
 @Module({
   imports: [
@@ -33,8 +34,7 @@ import { TicketService } from 'src/ticket/ticket.service';
     TypeOrmModule.forFeature([Category]),
     TypeOrmModule.forFeature([Payment]),
   ],
-  controllers: [EventController],
-  providers: [EventService, UserService, ImageService, QrCodeService, PaymentService, TicketService],
-
+  controllers: [PaymentController],
+  providers: [PaymentService, EventService, ImageService, UserService, FolloweventService,QrCodeService, TicketService]
 })
-export class EventModule {}
+export class PaymentModule {}
