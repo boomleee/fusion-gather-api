@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { User } from 'src/user/entities/user.entity';
 import { Event } from 'src/event/entities/event.entity';
 import {
@@ -5,7 +6,6 @@ import {
     Entity,
     JoinColumn,
     ManyToOne,
-    OneToOne,
     PrimaryGeneratedColumn,
   } from 'typeorm';
 
