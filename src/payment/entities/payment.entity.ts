@@ -1,7 +1,8 @@
 /* eslint-disable prettier/prettier */
 import { Event } from 'src/event/entities/event.entity';
+import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { User } from 'src/user/entities/user.entity';
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, OneToOne } from 'typeorm';
 
 @Entity('payment')
 export class Payment {
@@ -10,14 +11,15 @@ export class Payment {
   
   @ManyToOne(() => User)
   @JoinColumn({ name: 'userId' })
-  author: User;
+  userId: User;
 
   @ManyToOne(() => Event)
   @JoinColumn({ name: 'eventId' })
   eventId: Event;
 
-  @Column()
-  name: string;
+  @OneToOne(() => Ticket)
+  @JoinColumn({ name: 'ticketId' })
+  ticketId: Ticket;
 
   @Column('decimal', { precision: 10, scale: 2 })
   price: number;
@@ -25,12 +27,9 @@ export class Payment {
   @Column('int')
   quantity: number;
 
-  @Column()
-  description: string;
-
   @Column('boolean', { default: false })
-  paid: boolean; // Trạng thái thanh toán, mặc định là false
+  paid: boolean;
 
   @Column('timestamp', { default: () => 'CURRENT_TIMESTAMP' })
-  createdAt: Date; // Thời điểm tạo thanh toán, mặc định là thời điểm hiện tại
+  createdAt: Date;
 }

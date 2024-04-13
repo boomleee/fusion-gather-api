@@ -1,12 +1,9 @@
 /* eslint-disable prettier/prettier */
-import { IsNumber, IsString } from 'class-validator';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { IsNotEmpty, IsNumber, IsString } from 'class-validator';
+import { Column, Entity } from 'typeorm';
 
 @Entity()
 export class CreatePaymentDto {
-  @PrimaryGeneratedColumn()
-  id: number;
-
   @Column()
   @IsNumber()
   userId: number;
@@ -30,5 +27,9 @@ export class CreatePaymentDto {
   @Column()
   @IsNumber()
   quantity: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  ticketId: number;
 }
 

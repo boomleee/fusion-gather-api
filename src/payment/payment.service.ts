@@ -6,6 +6,8 @@ import Stripe from 'stripe';
 
 import { Payment } from "./entities/payment.entity";
 import { TicketService } from "src/ticket/ticket.service";
+import { Event } from "src/event/entities/event.entity";
+import { CreateTicketDto } from "src/ticket/dto/create-ticket.dto";
 
 @Injectable()
 export class PaymentService {
@@ -15,23 +17,23 @@ export class PaymentService {
         @InjectRepository(Payment)
         private readonly paymentRepository: Repository<Payment>,
         private readonly ticketService: TicketService,
+        @InjectRepository(Event)
+        private readonly eventRepository: Repository<Event>,
     ) {
         this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
             apiVersion: "2024-04-10"
         });
     }
 
-    async checkout(eventId: number, userId: number) {
-        try {
-            // Get tickets by eventId and userId
-            const tickets = await this.ticketService.findTicketByEventId(eventId, userId);
-            
-            // Calculate total price based on ticket prices
-            let totalPrice = 0;
-            for (const ticket of tickets) {
-                totalPrice += parseFloat(ticket.eventId.price);
-            }
 
+    async checkout(eventId: number, userId:number) {
+        try {
+            const ticket = await this.eventRepository.createQueryBuilder('event')
+            .where('event.id = :eventId', { eventId })
+            .getOne();
+            let totalPrice = 0;   
+            totalPrice += parseFloat(ticket.price);
+            
             // Create session using Stripe Checkout
             const session = await this.stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
@@ -48,17 +50,28 @@ export class PaymentService {
                     },
                 ],
                 mode: 'payment',
-                success_url: 'https://your-website.com/payment/success',
-                cancel_url: 'https://your-website.com/payment/cancel',
+                success_url: 'https://www.fusiongather.me/payment/success',
+                cancel_url: 'https://www.fusiongather.me/payment/cancel',
             });
+    
+            // Tạo một CreateTicketDto từ dữ liệu nhận được
+            const createTicketDto: CreateTicketDto = {
+              eventId: eventId,
+              userId: userId,
+              isScanned: false // Set isScanned to false by default
+            };
+    
+            // Tạo một vé sau khi thanh toán thành công
+            const newTicket = await this.ticketService.createTicketAfterSuccessfulPayment(createTicketDto);
 
-            // Redirect user to checkout URL
+    
             const paymentLink = session.url;
-
-            return { paymentLink, session };
+    
+            return { paymentLink, session, newTicket };
         } catch (error) {
             console.error('Error processing payment:', error);
             throw new Error('Internal Server Error');
         }
     }
+    
 }

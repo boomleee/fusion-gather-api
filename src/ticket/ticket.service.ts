@@ -4,7 +4,7 @@ import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { Ticket } from './entities/ticket.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DeepPartial, Repository } from 'typeorm';
 
 @Injectable()
 export class TicketService {
@@ -64,5 +64,20 @@ export class TicketService {
       return true;
     }
     return false;
+  }
+
+  async createTicketAfterSuccessfulPayment(createTicketDto: CreateTicketDto): Promise<Ticket> {
+    try {
+      const ticketPartial: DeepPartial<Ticket> = {
+        eventId: { id: createTicketDto.eventId }, // Convert eventId to DeepPartial<Event>
+        userId: { id: createTicketDto.userId }, // Convert userId to DeepPartial<User>
+        isScanned: createTicketDto.isScanned, // Keep isScanned as it is
+        // Gán các thuộc tính khác từ createTicketDto nếu cần
+      };
+      // Lưu thông tin vé vào cơ sở dữ liệu
+      return await this.ticketRepository.save(ticketPartial);
+    } catch (error) {
+      throw new Error('Failed to create ticket');
+    }
   }
 }
