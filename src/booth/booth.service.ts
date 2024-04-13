@@ -41,6 +41,7 @@ export class BoothService {
   ) {}
 
   async checkEventExist(eventId: number) {
+    if (eventId === null) return false;
     const event = await this.eventRepository.findOne({
       where: { id: eventId },
     });
@@ -49,6 +50,7 @@ export class BoothService {
   }
 
   async checkUserExist(vendorId: number) {
+    if (vendorId === null) return false;
     const user = await this.userRepository.findOne({
       where: { id: vendorId },
     });
@@ -57,6 +59,7 @@ export class BoothService {
   }
 
   async checkBoothExist(boothId: number) {
+    if (boothId === null) return false;
     const booth = await this.boothRepository.findOne({
       where: { id: boothId },
     });
@@ -89,6 +92,26 @@ export class BoothService {
 
     if (!isUserExist) {
       throw new NotFoundException(`User ${createBoothDto.vendorId} not exist`);
+    }
+
+    if (createBoothDto.name === '' || createBoothDto.name === null) {
+      throw new BadRequestException('Booth name cannot be empty');
+    }
+
+    if (createBoothDto.description === '' || createBoothDto.description === null) {
+      throw new BadRequestException('Booth description cannot be empty');
+    }
+
+    if (createBoothDto.latitude === null || createBoothDto.longitude === null) {
+      throw new BadRequestException('Booth location is invalid');
+    }
+
+    if (createBoothDto.latitude < -90 || createBoothDto.latitude > 90) {
+      throw new BadRequestException('Latitude must be between -90 and 90');
+    }
+
+    if (createBoothDto.longitude < -180 || createBoothDto.longitude > 180) {
+      throw new BadRequestException('Longitude must be between -180 and 180');
     }
 
     const { imageUrl, ...dtoWithoutImage } = createBoothDto;
@@ -210,6 +233,26 @@ export class BoothService {
       throw new ForbiddenException(
         'You dont have permission to modify this booth',
       );
+    }
+
+    if (updateBoothDto.name === '' || updateBoothDto.name === null) {
+      throw new BadRequestException('Booth name cannot be empty');
+    }
+
+    if (updateBoothDto.description === '' || updateBoothDto.description === null) {
+      throw new BadRequestException('Booth description cannot be empty');
+    }
+
+    if (updateBoothDto.latitude === null || updateBoothDto.longitude === null) {
+      throw new BadRequestException('Booth location is invalid');
+    }
+
+    if (updateBoothDto.latitude < -90 || updateBoothDto.latitude > 90) {
+      throw new BadRequestException('Latitude must be between -90 and 90');
+    }
+
+    if (updateBoothDto.longitude < -180 || updateBoothDto.longitude > 180) {
+      throw new BadRequestException('Longitude must be between -180 and 180');
     }
     const existingBooth = await this.boothRepository.findOne({
       where: { id: boothId },
