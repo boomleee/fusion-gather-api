@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -65,9 +65,11 @@ export class UserService {
     return existingUser;
   }
 
-  async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+  async update(id: number, updateUserDto: UpdateUserDto,): Promise<User> {
+    if(updateUserDto.sessionUserId !== id) {
+      throw new ForbiddenException(`You are not authorized to update this user`);
+    }
     const existingUser = await this.userRepository.findOne({ where: { id } });
-
     if (!existingUser) {
       throw new NotFoundException(`User with ID ${id} not found`);
     }

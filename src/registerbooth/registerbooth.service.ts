@@ -22,6 +22,7 @@ export class RegisterboothService {
   ) {}
 
   async checkUserExist(userId: number) {
+
     const user = await this.userRepository.findOne({
       where: { id: userId },
     });
@@ -30,6 +31,7 @@ export class RegisterboothService {
   }
 
   async checkBoothExist(boothId: number) {
+
     const booth = await this.boothRepository.findOne({
       where: { id: boothId },
     });
@@ -49,8 +51,20 @@ export class RegisterboothService {
 
 
   async create(createRegisterboothDto: CreateRegisterboothDto) {
-    const isUserExist = this.checkUserExist(createRegisterboothDto.userId);
-    const isBoothExist = this.checkBoothExist(createRegisterboothDto.boothId);
+    if (createRegisterboothDto.userId === null) {
+      throw new BadRequestException(`User ID is required!`);
+    }
+
+    if (createRegisterboothDto.boothId === null) {
+      throw new BadRequestException(`Booth ID is required!`);
+    }
+
+    if (createRegisterboothDto.reason === null || createRegisterboothDto.reason === '') {
+      throw new BadRequestException(`Reason is required!`);
+    }
+
+    const isUserExist = await this.checkUserExist(createRegisterboothDto.userId);
+    const isBoothExist = await this.checkBoothExist(createRegisterboothDto.boothId);
 
     if (!isUserExist) {
       throw new NotFoundException(`User does not exist!`);
@@ -80,18 +94,27 @@ export class RegisterboothService {
     return await this.registerboothRepository.save(registerbooth);
   }
 
+  async checkEventExist(eventId: number) {
+    const event = await this.boothRepository.findOne({
+      where: { id: eventId },
+    });
+    if (event) return true;
+    else return false;
+  }
+
   async findAllRequestByEventId(eventId: number) {
+    const isEventExist = await this.checkEventExist(eventId);
+
+    if (!isEventExist) {
+      throw new NotFoundException(`Event with ID ${eventId} not exist`);
+    }
+
     const registerbooth = await this.registerboothRepository
       .createQueryBuilder('registerbooth')
       .leftJoinAndSelect('registerbooth.user', 'user')
       .leftJoinAndSelect('registerbooth.booth', 'booth')
       .where('booth.eventId = :eventId', { eventId })
       .getMany();
-    if (registerbooth.length === 0) {
-      throw new BadRequestException(
-        `No booth registration request found for event with ID ${eventId}`,
-      );
-    }
 
     return registerbooth;
   };
