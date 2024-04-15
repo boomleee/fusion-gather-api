@@ -32,7 +32,7 @@ export class PaymentController {
       const paymentIntent = await this.paymentService.checkout(eventId, userId);
 
       // Trả về kết quả cho client
-      return { success: true, paymentIntent };
+      return { success: true, paymentLink: paymentIntent.paymentLink };
     } catch (error) {
       // Xử lý lỗi và trả về cho client
       return { success: false, error: error.message };

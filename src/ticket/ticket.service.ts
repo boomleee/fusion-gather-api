@@ -69,12 +69,10 @@ export class TicketService {
   async createTicketAfterSuccessfulPayment(createTicketDto: CreateTicketDto): Promise<Ticket> {
     try {
       const ticketPartial: DeepPartial<Ticket> = {
-        eventId: { id: createTicketDto.eventId }, // Convert eventId to DeepPartial<Event>
-        userId: { id: createTicketDto.userId }, // Convert userId to DeepPartial<User>
-        isScanned: createTicketDto.isScanned, // Keep isScanned as it is
-        // Gán các thuộc tính khác từ createTicketDto nếu cần
+        eventId: { id: createTicketDto.eventId },
+        userId: { id: createTicketDto.userId }, 
+        isScanned: createTicketDto.isScanned, 
       };
-      // Lưu thông tin vé vào cơ sở dữ liệu
       return await this.ticketRepository.save(ticketPartial);
     } catch (error) {
       throw new Error('Failed to create ticket');
