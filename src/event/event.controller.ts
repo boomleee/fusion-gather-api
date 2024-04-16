@@ -66,6 +66,11 @@ export class EventController {
     return this.eventService.findOne(+id);
   }
 
+  @Get('statistics/:id')
+  getEventStatistics(@Param('id') id: string) {
+    return this.eventService.getEventStatistics(+id);
+  }
+
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto) {
     return this.eventService.update(+id, updateEventDto);

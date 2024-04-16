@@ -4,7 +4,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, Equal, Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { MoreThanOrEqual } from 'typeorm';
 import { Image } from 'src/image/entities/image.entity';
@@ -17,6 +17,7 @@ import { Category } from 'src/category/entities/category.entity';
 import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
 import { MailerService } from '@nestjs-modules/mailer';
+import { EventStatisticDTO } from './dto/event-statistic.dto';
 @Injectable()
 export class EventService {
   constructor(
@@ -217,6 +218,25 @@ export class EventService {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
     return existingEvent;
+  }
+
+  async getEventStatistics(id: number): Promise<EventStatisticDTO> {
+    const totalEvents = await this.eventRepository.count();
+    const totalPublishedEvents = await this.eventRepository.count({
+      where: { isPublished: true },
+    });
+    const totalPendingEvents = await this.eventRepository.count({
+      where: { isPublished: false },
+    });
+    const totalTickets = await this.ticketRepository.count({
+      where: { eventId: Equal(id) },
+    });
+    return {
+      totalEvents,
+      totalPublishedEvents,
+      totalPendingEvents,
+      totalTickets,
+    };
   }
 
   async findPendingEvent(): Promise<Event[]> {
