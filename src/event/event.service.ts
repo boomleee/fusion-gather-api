@@ -40,6 +40,8 @@ export class EventService {
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
     private MailerService: MailerService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   //check event exist
@@ -151,7 +153,7 @@ export class EventService {
   }
 
   async checkUserExist(userId: number) {
-    const user = await this.eventRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id: userId },
     });
     if (user) return true;

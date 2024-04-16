@@ -123,7 +123,7 @@ export class AccountService {
       throw new BadRequestException(`Account ID is required`);
     }
     const existingAccount = await this.accountRepository.findOne({
-      where: { id },
+      where: { id: id },
     });
 
     if (!existingAccount) {
@@ -131,15 +131,18 @@ export class AccountService {
     }
 
     if (existingAccount.isActivated === false) {
-      throw new BadRequestException(`Account with ID ${id} is already disabled`);
+      existingAccount.isActivated = true;
+      console.log(`Account with ID ${id} has been enabled`);
+      const disableAcc =  await this.accountRepository.save(existingAccount);
+      return disableAcc;
     }
 
-    existingAccount.isActivated = false;
-
-    const disableAcc =  await this.accountRepository.save(existingAccount);
-    console.log(`Account with ID ${id} has been disabled`);
-
-    return disableAcc;
+    if (existingAccount.isActivated === true) {
+      existingAccount.isActivated = false;
+      console.log(`Account with ID ${id} has been disabled`);
+      const disableAcc =  await this.accountRepository.save(existingAccount);
+      return disableAcc;
+    }
   }
 
   async remove(id: number): Promise<void> {
