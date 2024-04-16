@@ -10,6 +10,7 @@ import { Booth } from 'src/booth/entities/booth.entity';
 import { User } from 'src/user/entities/user.entity';
 import { Repository } from 'typeorm';
 import { Registerbooth } from './entities/registerbooth.entity';
+import { Event } from 'src/event/entities/event.entity';
 
 
 @Injectable()
@@ -18,6 +19,7 @@ export class RegisterboothService {
     @InjectRepository(Registerbooth)private readonly registerboothRepository: Repository<Registerbooth>,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Booth) private readonly boothRepository: Repository<Booth>,
+    @InjectRepository(Event) private readonly eventRepository: Repository<Event>,
 
   ) {}
 
@@ -95,7 +97,7 @@ export class RegisterboothService {
   }
 
   async checkEventExist(eventId: number) {
-    const event = await this.boothRepository.findOne({
+    const event = await this.eventRepository.findOne({
       where: { id: eventId },
     });
     if (event) return true;
