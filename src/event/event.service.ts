@@ -223,21 +223,31 @@ export class EventService {
   }
 
   async getEventStatistics(id: number): Promise<EventStatisticDTO> {
-    const totalEvents = await this.eventRepository.count();
-    const totalPublishedEvents = await this.eventRepository.count({
-      where: { isPublished: true },
-    });
-    const totalPendingEvents = await this.eventRepository.count({
-      where: { isPublished: false },
+    const totalBooths = await this.boothRepository.count({
+      where: { eventId: Equal(id) },
     });
     const totalTickets = await this.ticketRepository.count({
       where: { eventId: Equal(id) },
     });
+
+    const totalVisitors = await this.ticketRepository.count({
+      where: { eventId: Equal(id),
+              isScanned: true
+      },
+    });
+
+    const event = await this.eventRepository.findOne({
+      where: { id },
+      select: ['price'],
+    });
+    
+    const eventRevenue = totalVisitors * Number(event.price);
+
     return {
-      totalEvents,
-      totalPublishedEvents,
-      totalPendingEvents,
+      totalBooths,
       totalTickets,
+      totalVisitors,
+      eventRevenue
     };
   }
 

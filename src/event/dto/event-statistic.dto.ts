@@ -2,19 +2,20 @@
 import { IsBoolean, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class EventStatisticDTO {
-  @IsNotEmpty()
-  @IsNumber()
-  totalEvents: number;
 
   @IsNotEmpty()
   @IsNumber()
-  totalPublishedEvents: number;
-
-  @IsNotEmpty()
-  @IsNumber()
-  totalPendingEvents: number;
+  totalBooths: number;
 
   @IsNotEmpty()
   @IsNumber()
   totalTickets: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  totalVisitors: number;
+
+  @IsNotEmpty()
+  @IsNumber()
+  eventRevenue: number;
 }
