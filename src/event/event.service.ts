@@ -4,7 +4,7 @@ import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Event } from './entities/event.entity';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, Equal, Repository } from 'typeorm';
 import { User } from 'src/user/entities/user.entity';
 import { MoreThanOrEqual } from 'typeorm';
 import { Image } from 'src/image/entities/image.entity';
@@ -17,6 +17,7 @@ import { Category } from 'src/category/entities/category.entity';
 import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
 import { MailerService } from '@nestjs-modules/mailer';
+import { EventStatisticDTO } from './dto/event-statistic.dto';
 @Injectable()
 export class EventService {
   constructor(
@@ -39,6 +40,8 @@ export class EventService {
     @InjectRepository(Category)
     private readonly categoryRepository: Repository<Category>,
     private MailerService: MailerService,
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
   ) {}
 
   //check event exist
@@ -150,7 +153,7 @@ export class EventService {
   }
 
   async checkUserExist(userId: number) {
-    const user = await this.eventRepository.findOne({
+    const user = await this.userRepository.findOne({
       where: { id: userId },
     });
     if (user) return true;
@@ -217,6 +220,35 @@ export class EventService {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
     return existingEvent;
+  }
+
+  async getEventStatistics(id: number): Promise<EventStatisticDTO> {
+    const totalBooths = await this.boothRepository.count({
+      where: { eventId: Equal(id) },
+    });
+    const totalTickets = await this.ticketRepository.count({
+      where: { eventId: Equal(id) },
+    });
+
+    const totalVisitors = await this.ticketRepository.count({
+      where: { eventId: Equal(id),
+              isScanned: true
+      },
+    });
+
+    const event = await this.eventRepository.findOne({
+      where: { id },
+      select: ['price'],
+    });
+    
+    const eventRevenue = totalVisitors * Number(event.price);
+
+    return {
+      totalBooths,
+      totalTickets,
+      totalVisitors,
+      eventRevenue
+    };
   }
 
   async findPendingEvent(): Promise<Event[]> {

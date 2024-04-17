@@ -50,9 +50,12 @@ export class TicketService {
   async remove(id: number) : Promise<void> {
     const ticketToRemove = await this.ticketRepository.findOne({ where: { id } });
     if (!ticketToRemove) {
-      throw new Error('Ticket not found');
+      throw new NotFoundException('Ticket not found');
     }
-    await this.ticketRepository.delete({ id });
+    if (ticketToRemove.isScanned) {
+      throw new ForbiddenException('Ticket has been scanned, cannot delete');
+    } 
+      await this.ticketRepository.delete({ id }); 
   }
 
   async checkEventExistByUserId(eventId: number, userId: number): Promise<boolean> {
