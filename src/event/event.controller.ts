@@ -62,8 +62,9 @@ export class EventController {
     @Query('category') category: string = "",
     @Query('pageNumber') pageNumber: number = 1,
     @Query('pageSize') pageSize: number = 20,
+    @Query('all') all: string = ""
   ) {
-    return this.eventService.findAll({ userId, searchString, category, pageNumber, pageSize });
+    return this.eventService.findAll({ userId, searchString, category, pageNumber, pageSize, all});
   }
 
   @Get(':id')

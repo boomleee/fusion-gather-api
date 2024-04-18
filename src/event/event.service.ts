@@ -167,6 +167,7 @@ export class EventService {
     category,
     pageNumber,
     pageSize,
+    all
   }): Promise<Event[]> {
     const query = this.eventRepository
       .createQueryBuilder('event')
@@ -178,6 +179,12 @@ export class EventService {
         throw new NotFoundException(`User with ID ${userId} not found`);
       }
       query.andWhere('event.author = :userId', { userId: userId });
+      return query.getMany();
+    }
+    if (all) {
+      query.skip((pageNumber - 1) * pageSize).take(pageSize);
+      console.log(all);
+      
       return query.getMany();
     }
 
