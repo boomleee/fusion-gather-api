@@ -21,6 +21,7 @@ export class TicketService {
     return `This action returns all ticket`;
   }
 
+
   async findTicketByEventId(eventId: number, userId: number): Promise<Ticket[]> {
     if (isNaN(eventId)) {
       throw new BadRequestException('Invalid event id');
@@ -68,13 +69,19 @@ export class TicketService {
     }
     return false;
   }
-
+  async paidStatus( createTicketDto: CreateTicketDto, paidStatus: string) {
+    if(paidStatus) {
+      createTicketDto.paidStatus = paidStatus
+      this.createTicketAfterSuccessfulPayment(createTicketDto)
+    }
+  }
   async createTicketAfterSuccessfulPayment(createTicketDto: CreateTicketDto): Promise<Ticket> {
     try {
       const ticketPartial: DeepPartial<Ticket> = {
         eventId: { id: createTicketDto.eventId },
         userId: { id: createTicketDto.userId }, 
         isScanned: createTicketDto.isScanned, 
+        paidStatus: createTicketDto.paidStatus
       };
       return await this.ticketRepository.save(ticketPartial);
     } catch (error) {

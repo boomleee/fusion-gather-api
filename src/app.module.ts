@@ -18,12 +18,16 @@ import { ImageModule } from './image/image.module';
 import { FolloweventModule } from './followevent/followevent.module';
 import { RegisterboothModule } from './registerbooth/registerbooth.module';
 import { PaymentModule } from './payment/payment.module';
-import { WebhookModule } from './webhook/webhook.module';
+import { WebhookModule } from './Webhook/webhook.module';
+import * as Joi from '@hapi/joi';
 @Module({
   imports: [
     ConfigModule.forRoot({
       envFilePath: '.env',
-      isGlobal: true
+      isGlobal: true,
+      validationSchema: Joi.object({
+        STRIPE_WEBHOOK_SECRET: Joi.string(),
+      }),
     }),
     TypeOrmModule.forRoot(dataSourceOptions),
     MailerModule.forRootAsync({
@@ -59,4 +63,4 @@ import { WebhookModule } from './webhook/webhook.module';
   controllers: [AppController],
   providers: [AppService],
 })
-export class AppModule { }
+export class AppModule {}

@@ -62,6 +62,7 @@ export class PaymentService {
         eventId: eventId,
         userId: userId,
         isScanned: false,
+        paidStatus: ''
       };
       console.log('session cua payment', session);
       const paymentLink = session.url;

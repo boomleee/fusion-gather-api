@@ -18,6 +18,8 @@ import { EventService } from 'src/event/event.service';
 import { UserService } from 'src/user/user.service';
 import { ImageService } from 'src/image/image.service';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
+import WebhookController from './webhook.controller';
+import StripeService from './stripe.service';
 
 @Module({
   imports: [
@@ -34,7 +36,7 @@ import { QrCodeService } from 'src/qrcode/qrcode.service';
     TypeOrmModule.forFeature([Payment]),
   ],
 
-  controllers: [TicketController],
-  providers: [EventService, UserService, ImageService, QrCodeService, PaymentService,TicketService],
+  controllers: [TicketController,WebhookController],
+  providers: [EventService, UserService, ImageService, QrCodeService, PaymentService,TicketService,StripeService],
 })
 export class WebhookModule {}

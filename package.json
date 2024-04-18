@@ -24,6 +24,7 @@
     "migration:revert": "npm run typeorm -- migration:revert"
   },
   "dependencies": {
+    "@hapi/joi": "^17.1.1",
     "@nestjs-modules/mailer": "^1.10.3",
     "@nestjs/axios": "^3.0.2",
     "@nestjs/cli": "^10.3.0",

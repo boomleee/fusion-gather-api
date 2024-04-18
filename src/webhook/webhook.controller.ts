@@ -1,21 +1,40 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Post, Body, Headers } from '@nestjs/common';
-import { Stripe } from 'stripe';
-import { PaymentService } from 'src/payment/payment.service'; // Import service để gọi hàm handleWebhook
 
+import { Controller, Post, Headers, Req, BadRequestException } from '@nestjs/common';
+import StripeService from './stripe.service';
+import RequestWithRawBody from './requestWithRawBody.interface';
+import { TicketService } from 'src/ticket/ticket.service';
+import { CreateTicketDto } from 'src/ticket/dto/create-ticket.dto';
+ 
 @Controller('webhook')
-export class WebhookController {
-  private stripe: Stripe;
-
-  constructor(private paymentService: PaymentService) {
-    this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
-      apiVersion: '2024-04-10',
-    });
+export default class WebhookController {
+  constructor(
+    private readonly stripeService: StripeService,
+    private readonly ticketService: TicketService,
+  ) {}
+ 
+  @Post()
+  async handleIncomingEvents(
+    @Headers('stripe-signature') signature: string,
+    @Req() request: RequestWithRawBody
+  ) {
+    if (!signature) {
+      throw new BadRequestException('Missing stripe-signature header');
+    }
+ 
+    const event = await this.stripeService.constructEventFromPayload(signature, request.rawBody);
+ 
+    if (event.type === 'charge.captured') {
+      const data = event.data.object ;
+      const createTicketDto: CreateTicketDto = {
+        eventId: 1,
+        userId: 1,
+        isScanned: false,
+        paidStatus: 'false',
+      };
+      const ticketStatus = data.status;
+ 
+      await this.ticketService.paidStatus(createTicketDto, ticketStatus)
+    }
   }
-
-  // @Post()
-  // async handleStripeEvent(@Body() body: any, @Headers('stripe-signature') signature: string) {
-  //   await this.paymentService.handleWebhook({ body, headers: { 'whsec_7bffa39471f462f62855961e68d433ea0096f35ed0fbd80f77dff86dc0850df9': signature } });
-  // }
 }
-

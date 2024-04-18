@@ -25,4 +25,7 @@ export class Ticket {
 
     @Column()
     isScanned: boolean;
+
+    @Column({ nullable: true })
+    paidStatus: string;
 }
