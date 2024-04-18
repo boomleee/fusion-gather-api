@@ -11,6 +11,8 @@ import { CreateTicketDto } from 'src/ticket/dto/create-ticket.dto';
 import { MailerService } from '@nestjs-modules/mailer';
 import { User } from 'src/user/entities/user.entity';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
+import * as CryptoJS from 'crypto-js';
+
 @Injectable()
 export class PaymentService {
   private stripe: Stripe;
@@ -32,6 +34,9 @@ export class PaymentService {
 
   async checkout(eventId: number, userId: number) {
     try {
+      const combinedString = `${eventId}:${userId}`
+      const encryptedString = CryptoJS.AES.encrypt(combinedString, process.env.STRIPE_ENCRYPT_KEY)
+
       const ticket = await this.eventRepository
         .createQueryBuilder('event')
         .where('event.id = :eventId', { eventId })
@@ -55,11 +60,11 @@ export class PaymentService {
           },
         ],
         mode: 'payment',
-        success_url: `https://www.fusiongather.me/event/${eventId}`,
+        success_url: `https://www.fusiongather.me/event/${encryptedString}`,
         cancel_url: `https://www.fusiongather.me/event/${eventId}`,
       });
       const paymentLink = session.url;
-      return { paymentLink,session};
+      return { paymentLink, session };
     } catch (error) {
       console.error('Error processing payment:', error);
       throw new Error('Internal Server Error');
