@@ -30,6 +30,11 @@ export class EventController {
     return this.eventService.create(createEventDto, user);
   }
 
+  @Get('statistics/total')
+  getTotalStatistics() {
+    return this.eventService.getTotalStatistic();
+  }
+  
   @Get('/pending')
   findPendingEvents() {
     return this.eventService.findPendingEvent();
@@ -70,6 +75,7 @@ export class EventController {
   getEventStatistics(@Param('id') id: string) {
     return this.eventService.getEventStatistics(+id);
   }
+
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto) {
