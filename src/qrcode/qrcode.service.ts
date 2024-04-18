@@ -5,6 +5,7 @@ import { Repository } from 'typeorm';
 import { Qrcode } from './entities/qrcode.entity';
 import { Event } from 'src/event/entities/event.entity';
 import { Booth } from 'src/booth/entities/booth.entity';
+import { Ticket } from 'src/ticket/entities/ticket.entity';
 import * as QRCode from 'qrcode';
 
 @Injectable()
@@ -16,6 +17,8 @@ export class QrCodeService {
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(Booth)
     private readonly boothRepository: Repository<Booth>,
+    @InjectRepository(Ticket)
+    private readonly ticketRepository: Repository<Ticket>,
   ) {}
 
   async generateAndSaveQRCode(eventId): Promise<string> {
@@ -79,6 +82,29 @@ export class QrCodeService {
       qrcode.qrCode = qrDataString;
       qrcode.boothId = boothId;
       await this.qrcodeRepository.save(qrcode);
+
+      return qrCodeImage;
+    } catch (error) {
+      console.error('Error generating QR Code:', error);
+      throw new Error('Internal Server Error');
+    }
+  } 
+  async generateAndSaveQRCodeForTicket(ticketId) {
+    try {
+      // Truy xuất thông tin booth từ cơ sở dữ liệu
+      const ticket = await this.ticketRepository.createQueryBuilder('ticket')
+        .where('ticket.id = :ticketId', { ticketId })
+        .getOne();
+
+      if (!ticket) {
+        throw new Error('Ticket not found');
+      }
+
+      // Nếu chưa có QR Code cho Booth này, tiếp tục tạo mới và lưu vào cơ sở dữ liệu
+      const qrData = { ticketId: ticketId };
+      const qrDataString = JSON.stringify(qrData);
+      const qrCodeImage = await QRCode.toDataURL(qrDataString);
+      console.log('qrCodeString', qrDataString);
 
       return qrCodeImage;
     } catch (error) {
