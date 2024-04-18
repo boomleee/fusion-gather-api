@@ -18,6 +18,7 @@ import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
 import { MailerService } from '@nestjs-modules/mailer';
 import { EventStatisticDTO } from './dto/event-statistic.dto';
+import { TotalStatisticDTO } from './dto/total-statistic.dto';
 @Injectable()
 export class EventService {
   constructor(
@@ -248,6 +249,25 @@ export class EventService {
       totalTickets,
       totalVisitors,
       eventRevenue
+    };
+  }
+
+  async getTotalStatistic(): Promise<TotalStatisticDTO> {
+    const totalBooths = await this.boothRepository.count();
+    const totalTickets = await this.ticketRepository.count();
+    const totalVisitors = await this.ticketRepository.count({
+      where: { isScanned: true },
+    });
+    const totalEvents = await this.eventRepository.count();
+    const totalUsers = await this.userRepository.createQueryBuilder('user')
+      .where('user.isAdmin = :isAdmin', { isAdmin: false })
+      .getCount();
+    return {
+      totalBooths,
+      totalTickets,
+      totalVisitors,
+      totalEvents,
+      totalUsers,
     };
   }
 
