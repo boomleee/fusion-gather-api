@@ -4,6 +4,7 @@ import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { Ticket } from './entities/ticket.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { QrCodeService } from 'src/qrcode/qrcode.service';
 import { DeepPartial, Repository } from 'typeorm';
 
 @Injectable()
@@ -11,6 +12,7 @@ export class TicketService {
   constructor(
     @InjectRepository(Ticket) private readonly ticketRepository: Repository<Ticket>,
     @InjectRepository(Event) private readonly eventRepository: Repository<Event>,
+    private readonly qrCodeService: QrCodeService,
   ) { }
 
   create(createTicketDto: CreateTicketDto) {
@@ -76,7 +78,14 @@ export class TicketService {
         userId: { id: createTicketDto.userId }, 
         isScanned: createTicketDto.isScanned, 
       };
+      if (ticketPartial === null) {
+        throw new Error('Invalid ticket data');
+      } else {
+        const qrforticket = await this.qrCodeService.generateAndSaveQRCodeForTicket(ticketPartial);
+        console.log('Ticket QR Code', qrforticket);
+      }
       return await this.ticketRepository.save(ticketPartial);
+
     } catch (error) {
       throw new Error('Failed to create ticket');
     }
