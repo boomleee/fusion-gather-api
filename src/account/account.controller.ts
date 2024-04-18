@@ -104,6 +104,12 @@ export class AccountController {
     return this.accountService.login(loginDto);
   }
 
+  @Post('admin/login')
+  @UsePipes(ValidationPipe)
+  adminLogin(@Body() loginDto: LoginDto) {
+    return this.accountService.adminLogin(loginDto);
+  }
+
   @UseGuards(RefreshGuard)
   @Post('refresh')
   refreshToken(
