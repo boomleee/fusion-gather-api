@@ -1,4 +1,9 @@
-import { BadGatewayException, BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadGatewayException,
+  BadRequestException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { UpdateAccountDto } from './dto/update-account.dto';
 import { UserService } from 'src/user/user.service';
 import { RegisterDto } from './dto/register.dto';
@@ -8,7 +13,7 @@ import { User } from 'src/user/entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { MailerService } from '@nestjs-modules/mailer'
+import { MailerService } from '@nestjs-modules/mailer';
 import { VerifyAccountDto } from './dto/verify-account.dto';
 import { ResetRequestDto } from './dto/reset-request.dto';
 import { ResetPasswordCodeDto } from './dto/reset-password-code.dto';
@@ -16,7 +21,7 @@ import { ChangePasswordDto } from 'src/account/dto/change-password.dto';
 import { JwtService } from '@nestjs/jwt';
 import { LoginDto } from './dto/login.dto';
 
-const EXPIRE_TIME = 10 * 60 * 60 * 1000
+const EXPIRE_TIME = 10 * 60 * 60 * 1000;
 
 @Injectable()
 export class AccountService {
@@ -26,7 +31,7 @@ export class AccountService {
     private readonly userService: UserService,
     private mailerService: MailerService,
     private jwtService: JwtService,
-  ) { }
+  ) {}
 
   //check username exist
   async checkUsernameExist(username: string) {
@@ -118,7 +123,6 @@ export class AccountService {
   }
 
   async disableAccount(id: number): Promise<Account> {
-
     if (id === null) {
       throw new BadRequestException(`Account ID is required`);
     }
@@ -133,14 +137,14 @@ export class AccountService {
     if (existingAccount.isActivated === false) {
       existingAccount.isActivated = true;
       console.log(`Account with ID ${id} has been enabled`);
-      const disableAcc =  await this.accountRepository.save(existingAccount);
+      const disableAcc = await this.accountRepository.save(existingAccount);
       return disableAcc;
     }
 
     if (existingAccount.isActivated === true) {
       existingAccount.isActivated = false;
       console.log(`Account with ID ${id} has been disabled`);
-      const disableAcc =  await this.accountRepository.save(existingAccount);
+      const disableAcc = await this.accountRepository.save(existingAccount);
       return disableAcc;
     }
   }
@@ -233,19 +237,21 @@ export class AccountService {
   }
 
   private async generateToken(payload: { id: number }) {
-    const { id } = payload
+    const { id } = payload;
 
-    const user = await this.userService.findOne(id)
-    const access_token = await this.jwtService.signAsync(payload,);
-    const refresh_token = await this.jwtService.signAsync(
-      payload, { secret: process.env.REFRESH_TOKEN_KEY, expiresIn: "7d" })
+    const user = await this.userService.findOne(id);
+    const access_token = await this.jwtService.signAsync(payload);
+    const refresh_token = await this.jwtService.signAsync(payload, {
+      secret: process.env.REFRESH_TOKEN_KEY,
+      expiresIn: '7d',
+    });
     return {
       user,
       tokens: {
         accessToken: access_token,
         refreshToken: refresh_token,
-        expriesIn: new Date().setTime(new Date().getTime() + EXPIRE_TIME)
-      }
+        expriesIn: new Date().setTime(new Date().getTime() + EXPIRE_TIME),
+      },
     };
   }
 
@@ -267,8 +273,30 @@ export class AccountService {
     const payload = { id: account.id };
     return this.generateToken(payload);
   }
+  async adminLogin(loginDto: LoginDto) {
+    const account = await this.accountRepository.findOne({
+      where: { username: loginDto.username },
+      relations: ['user'],
+    });
+    if (!account) {
+      throw new NotFoundException('Username is not exist');
+    }
+    if (!account.user.isAdmin) {
+      throw new NotFoundException('Your user is not admin');
+    }
+    const checkPass = bcrypt.compareSync(loginDto.password, account.password);
+    if (!checkPass) {
+      throw new NotFoundException('Password is not correct');
+    }
+
+    if (!account.isActivated) {
+      throw new NotFoundException('Account is disabled');
+    }
+    const payload = { id: account.id };
+    return this.generateToken(payload);
+  }
 
   async refreshToken(id: number) {
-    return this.generateToken({ id })
+    return this.generateToken({ id });
   }
 }
