@@ -11,6 +11,7 @@ import { Image } from 'src/image/entities/image.entity';
 import { Type } from 'class-transformer';
 import { ImageService } from 'src/image/image.service';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
+import { Ticket } from 'src/ticket/entities/ticket.entity';
 @Module({
   imports: [
     TypeOrmModule.forFeature([Booth]),
@@ -19,6 +20,7 @@ import { QrCodeService } from 'src/qrcode/qrcode.service';
     TypeOrmModule.forFeature([User]),
     TypeOrmModule.forFeature([Registerbooth]),
     TypeOrmModule.forFeature([Image]),
+    TypeOrmModule.forFeature([Ticket]),
   ],
   controllers: [BoothController],
   providers: [BoothService, ImageService, QrCodeService],
