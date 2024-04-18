@@ -1,13 +1,9 @@
 /* eslint-disable prettier/prettier */
-import {
-  BadRequestException,
-  ForbiddenException,
-  Injectable,
-  NotFoundException,
-} from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { Ticket } from './entities/ticket.entity';
 import { InjectRepository } from '@nestjs/typeorm';
+import { QrCodeService } from 'src/qrcode/qrcode.service';
 import { DeepPartial, Repository } from 'typeorm';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
 import { User } from 'src/user/entities/user.entity';
@@ -43,7 +39,7 @@ export class TicketService {
     }
     const eventExist = await this.checkEventExistByUserId(eventId, userId);
     if (!eventExist) {
-      throw new ForbiddenException('You cannot access this event');
+      throw new UnauthorizedException('You cannot access this event');
     }
     const tickets = await this.ticketRepository
       .createQueryBuilder('ticket')
@@ -101,6 +97,7 @@ export class TicketService {
         await this.qrCodeService.generateAndSaveQRCodeForTicket(createTicketDto.eventId);
       }
       return await this.ticketRepository.save(ticketPartial);
+
     } catch (error) {
       throw new Error('Failed to create ticket');
     }
