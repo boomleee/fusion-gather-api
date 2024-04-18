@@ -12,5 +12,4 @@ export class CreateTicketDto {
 
     isScanned: boolean;
 
-    paidStatus: string;
 }

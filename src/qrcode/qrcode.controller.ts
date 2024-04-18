@@ -44,6 +44,17 @@ export class QrCodeController {
       throw new InternalServerErrorException('Internal Server Error');
     }
   }
+  @Post('ticket/:ticketId')
+  async generateQRCodeForTicket(@Param('ticketId') ticketId: number) {
+    try {
+      const qrCodeImage = await this.qrCodeService.generateAndSaveQRCodeForTicket(ticketId);
+      return qrCodeImage;
+    } catch (error) {
+      console.error('Error generating QR Code:', error);
+      throw new NotFoundException('QR Code generation failed');
+    }
+  }
+
 }
 
 

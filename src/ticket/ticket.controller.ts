@@ -9,11 +9,6 @@ import { UpdateTicketDto } from './dto/update-ticket.dto';
 export class TicketController {
   constructor(private readonly ticketService: TicketService) {}
 
-  @Post()
-  create(@Body() createTicketDto: CreateTicketDto) {
-    return this.ticketService.create(createTicketDto);
-  }
-
   @Get()
   findAll() {
     return this.ticketService.findAll();
@@ -23,11 +18,6 @@ export class TicketController {
   @UsePipes(ValidationPipe)
   findOne(@Param('eventId') eventId: string, @Param('userId') userId: string) {
     return this.ticketService.findTicketByEventId(+eventId, +userId);
-  }
-
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTicketDto: UpdateTicketDto) {
-    return this.ticketService.update(+id, updateTicketDto);
   }
 
   @Delete(':id')
