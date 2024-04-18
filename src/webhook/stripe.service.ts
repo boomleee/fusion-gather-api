@@ -10,19 +10,21 @@ export default class StripeService {
   constructor(
     private configService: ConfigService
   ) {
-    this.stripe = new Stripe(configService.get(`${process.env.STRIPE_SECRET_KEY}`), {
+    const stripeSecretKey = this.configService.get('STRIPE_SECRET_KEY'); 
+    const stripeWebhookSecret = this.configService.get('STRIPE_WEBHOOK_SECRET'); 
+    console.log("Stripe Service Secret Key:", stripeSecretKey); 
+    console.log("Stripe Service Webhook Secret:", stripeWebhookSecret); 
+
+    this.stripe = new Stripe(stripeSecretKey, {
       apiVersion: '2024-04-10',
     });
   }
  
   public async constructEventFromPayload(signature: string, payload: Buffer) {
-    const webhookSecret = this.configService.get(`${process.env.STRIPE_WEBHOOK_SECRET}`);
- 
-    return this.stripe.webhooks.constructEvent(
-      payload,
-      signature,
-      webhookSecret
-    );
+    const webhookSecret = this.configService.get('STRIPE_WEBHOOK_SECRET');
+    console.log("strip.service_webhookSecret",webhookSecret);
+    console.log("strip.service_payload",payload);
+    return this.stripe.webhooks.constructEvent(payload,signature,webhookSecret);
   }
  
 }
