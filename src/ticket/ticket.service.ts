@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { Ticket } from './entities/ticket.entity';
@@ -32,7 +32,7 @@ export class TicketService {
     }
     const eventExist = await this.checkEventExistByUserId(eventId, userId);
     if (!eventExist) {
-      throw new ForbiddenException('You cannot access this event');
+      throw new UnauthorizedException('You cannot access this event');
     }
     const tickets = await this.ticketRepository.createQueryBuilder('ticket')
       .innerJoinAndSelect('ticket.eventId', 'event')
@@ -52,9 +52,12 @@ export class TicketService {
   async remove(id: number) : Promise<void> {
     const ticketToRemove = await this.ticketRepository.findOne({ where: { id } });
     if (!ticketToRemove) {
-      throw new Error('Ticket not found');
+      throw new NotFoundException('Ticket not found');
     }
-    await this.ticketRepository.delete({ id });
+    if (ticketToRemove.isScanned) {
+      throw new ForbiddenException('Ticket has been scanned, cannot delete');
+    } 
+      await this.ticketRepository.delete({ id }); 
   }
 
   async checkEventExistByUserId(eventId: number, userId: number): Promise<boolean> {

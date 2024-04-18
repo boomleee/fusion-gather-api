@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { ForbiddenException, Injectable, NotAcceptableException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -28,6 +28,36 @@ export class UserService {
     });
     if (user) return true;
     else return false;
+  }
+
+  async checkIsDateValid(date: string) {
+    const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+  if (!date.match(dateRegex)) {
+    return false; // Invalid format, return false
+  }
+
+  // Extract year, month, and day from the date string
+  const [year, month, day] = date.split('-').map(Number);
+
+  // Check if the year is greater than or equal to 1900
+  if (year < 1900) {
+    return false; // Year is not valid, return false
+  }
+
+  // Check if the month is valid (between 1 and 12)
+  if (month < 1 || month > 12) {
+    return false; // Month is not valid, return false
+  }
+
+  // Check if the day is valid
+  // Use the last day of the month to validate the day (based on month and year)
+  const lastDayOfMonth = new Date(year, month, 0).getDate();
+  if (day < 1 || day > lastDayOfMonth) {
+    return false; // Day is not valid, return false
+  }
+
+  // If all checks pass, return true
+  return true; // Date is valid
   }
 
   async create(createUserDto: CreateUserDto) {
@@ -66,12 +96,16 @@ export class UserService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto,): Promise<User> {
+    const isDateValidate = await this.checkIsDateValid(updateUserDto.dob);
     if(updateUserDto.sessionUserId !== id) {
-      throw new ForbiddenException(`You are not authorized to update this user`);
+      throw new UnauthorizedException(`You are not authorized to update this user`);
     }
     const existingUser = await this.userRepository.findOne({ where: { id } });
     if (!existingUser) {
       throw new NotFoundException(`User with ID ${id} not found`);
+    }
+    if (!isDateValidate) {
+      throw new NotAcceptableException(`Date of birth ${updateUserDto.dob} is invalid`);
     }
     Object.assign(existingUser, updateUserDto);
 
@@ -87,4 +121,5 @@ export class UserService {
 
     await this.userRepository.remove(userToRemove);
   }
+
 }
