@@ -30,7 +30,6 @@ export class PaymentController {
 
       // Gọi phương thức checkout từ PaymentService và truyền eventId
       const paymentIntent = await this.paymentService.checkout(eventId, userId);
-
       // Trả về kết quả cho client
       return { success: true, paymentLink: paymentIntent.paymentLink };
     } catch (error) {

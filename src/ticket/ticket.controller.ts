@@ -9,11 +9,6 @@ import { UpdateTicketDto } from './dto/update-ticket.dto';
 export class TicketController {
   constructor(private readonly ticketService: TicketService) {}
 
-  @Post()
-  create(@Body() createTicketDto: CreateTicketDto) {
-    return this.ticketService.create(createTicketDto);
-  }
-
   @Get()
   findAll() {
     return this.ticketService.findAll();
@@ -25,13 +20,18 @@ export class TicketController {
     return this.ticketService.findTicketByEventId(+eventId, +userId);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateTicketDto: UpdateTicketDto) {
-    return this.ticketService.update(+id, updateTicketDto);
-  }
-
   @Delete(':id')
   remove(@Param('id') id: string) {
     return this.ticketService.remove(+id);
+  }
+
+  @Post('create')
+  create(@Body() createTicketDto: CreateTicketDto) {
+    const newCreateTicketDto: CreateTicketDto = {
+      eventId: Number(createTicketDto.eventId),
+      userId: Number(createTicketDto.userId),
+      isScanned: false
+    };
+    return this.ticketService.createTicketAfterSuccessfulPayment(newCreateTicketDto);
   }
 }

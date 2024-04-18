@@ -3,11 +3,15 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import Stripe from 'stripe';
-
+import QRCode from 'qrcode';
 import { Payment } from './entities/payment.entity';
 import { TicketService } from 'src/ticket/ticket.service';
 import { Event } from 'src/event/entities/event.entity';
 import { CreateTicketDto } from 'src/ticket/dto/create-ticket.dto';
+import { MailerService } from '@nestjs-modules/mailer';
+import { User } from 'src/user/entities/user.entity';
+import { QrCodeService } from 'src/qrcode/qrcode.service';
+import * as CryptoJS from 'crypto-js';
 
 @Injectable()
 export class PaymentService {
@@ -17,8 +21,11 @@ export class PaymentService {
     @InjectRepository(Payment)
     private readonly paymentRepository: Repository<Payment>,
     private readonly ticketService: TicketService,
+    private readonly qrCodeService: QrCodeService,
     @InjectRepository(Event)
     private readonly eventRepository: Repository<Event>,
+    private MailerService: MailerService,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
   ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: '2024-04-10',
@@ -27,6 +34,9 @@ export class PaymentService {
 
   async checkout(eventId: number, userId: number) {
     try {
+      const combinedString = `${eventId}:${userId}`
+      const encryptedString = CryptoJS.AES.encrypt(combinedString, process.env.STRIPE_ENCRYPT_KEY).toString()
+
       const ticket = await this.eventRepository
         .createQueryBuilder('event')
         .where('event.id = :eventId', { eventId })
@@ -50,23 +60,10 @@ export class PaymentService {
           },
         ],
         mode: 'payment',
-        success_url: `https://www.fusiongather.me/event/${eventId}`,
+        success_url: `https://www.fusiongather.me/event/success/${encryptedString}`,
         cancel_url: `https://www.fusiongather.me/event/${eventId}`,
       });
-      const createTicketDto: CreateTicketDto = {
-        eventId: eventId,
-        userId: userId,
-        isScanned: false,
-      };
-
       const paymentLink = session.url;
-      if (session.success_url && session.payment_status == 'paid') {
-        await this.ticketService.createTicketAfterSuccessfulPayment(
-          createTicketDto,
-        );
-        console.log('check data', session.success_url);
-        console.log('check data2 ', session.payment_status);
-      }
       return { paymentLink, session };
     } catch (error) {
       console.error('Error processing payment:', error);

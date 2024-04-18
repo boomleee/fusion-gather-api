@@ -16,6 +16,7 @@ import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { UserService } from 'src/user/user.service';
 import { FolloweventService } from 'src/followevent/followevent.service';
 import { Category } from 'src/category/entities/category.entity';
+import { TicketService } from 'src/ticket/ticket.service';
 
 @Module({
   imports: [
@@ -30,6 +31,6 @@ import { Category } from 'src/category/entities/category.entity';
     TypeOrmModule.forFeature([Category]),
   ],
   controllers: [QrCodeController],
-  providers: [QrCodeService, FolloweventService, UserService, EventService, ImageService],
+  providers: [QrCodeService, FolloweventService, UserService, EventService, ImageService, TicketService],
 })
 export class QrcodeModule {}

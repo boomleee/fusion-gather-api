@@ -11,4 +11,5 @@ export class CreateTicketDto {
     userId: number;
 
     isScanned: boolean;
+
 }

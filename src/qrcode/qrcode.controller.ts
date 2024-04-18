@@ -72,4 +72,15 @@ export class QrCodeController {
   async checkTicket(@Param('userId') userId: string, @Param('ticketId') ticketId: string) {
     return this.qrCodeService.checkTicket(+userId, +ticketId)
   }
+  @Post('ticket/:ticketId')
+  async generateQRCodeForTicket(@Param('ticketId') ticketId: number) {
+    try {
+      const qrCodeImage = await this.qrCodeService.generateAndSaveQRCodeForTicket(ticketId);
+      return qrCodeImage;
+    } catch (error) {
+      console.error('Error generating QR Code:', error);
+      throw new NotFoundException('QR Code generation failed');
+    }
+  }
+
 }
