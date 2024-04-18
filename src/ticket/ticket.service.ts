@@ -12,6 +12,7 @@ import { DeepPartial, Repository } from 'typeorm';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
 import { User } from 'src/user/entities/user.entity';
 import { MailerService } from '@nestjs-modules/mailer';
+import { create } from 'domain';
 
 @Injectable()
 export class TicketService {
@@ -97,7 +98,7 @@ export class TicketService {
       if (ticketPartial === null) {
         throw new Error('Invalid ticket data');
       } else {
-        await this.qrCodeService.generateAndSaveQRCodeForTicket(ticketPartial);
+        await this.qrCodeService.generateAndSaveQRCodeForTicket(createTicketDto.eventId);
       }
       return await this.ticketRepository.save(ticketPartial);
     } catch (error) {

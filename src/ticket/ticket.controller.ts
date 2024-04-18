@@ -24,4 +24,14 @@ export class TicketController {
   remove(@Param('id') id: string) {
     return this.ticketService.remove(+id);
   }
+
+  @Post('create')
+  create(@Body() createTicketDto: CreateTicketDto) {
+    const newCreateTicketDto: CreateTicketDto = {
+      eventId: Number(createTicketDto.eventId),
+      userId: Number(createTicketDto.userId),
+      isScanned: false
+    };
+    return this.ticketService.createTicketAfterSuccessfulPayment(newCreateTicketDto);
+  }
 }

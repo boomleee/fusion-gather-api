@@ -131,14 +131,6 @@ export class QrCodeService {
   }
   async generateAndSaveQRCodeForTicket(ticketId) {
     try {
-      // Truy xuất thông tin booth từ cơ sở dữ liệu
-      const ticket = await this.ticketRepository.createQueryBuilder('ticket')
-        .where('ticket.id = :ticketId', { ticketId })
-        .getOne();
-
-      if (!ticket) {
-        throw new Error('Ticket not found');
-      }
 
       // Nếu chưa có QR Code cho Booth này, tiếp tục tạo mới và lưu vào cơ sở dữ liệu
       const qrData = { ticketId: ticketId };
