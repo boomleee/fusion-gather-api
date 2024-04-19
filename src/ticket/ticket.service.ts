@@ -1,14 +1,19 @@
 /* eslint-disable prettier/prettier */
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { Ticket } from './entities/ticket.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QrCodeService } from 'src/qrcode/qrcode.service';
 import { DeepPartial, Repository } from 'typeorm';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
 import { User } from 'src/user/entities/user.entity';
 import { MailerService } from '@nestjs-modules/mailer';
-import { create } from 'domain';
+import * as QRCode from 'qrcode';
 
 @Injectable()
 export class TicketService {
@@ -20,7 +25,7 @@ export class TicketService {
     private readonly qrCodeService: QrCodeService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
-    private MailerService: MailerService,
+    private mailerService: MailerService,
   ) {}
 
   findAll() {
@@ -90,14 +95,27 @@ export class TicketService {
         userId: { id: createTicketDto.userId },
         isScanned: createTicketDto.isScanned,
       };
-      
-      if (ticketPartial === null) {
-        throw new Error('Invalid ticket data');
-      } else {
-        await this.qrCodeService.generateAndSaveQRCodeForTicket(createTicketDto.eventId);
-      }
-      return await this.ticketRepository.save(ticketPartial);
+      const ticket = await this.ticketRepository.save(ticketPartial);
 
+      const qrData = { ticketId: ticket.id };
+      const qrDataString = JSON.stringify(qrData);
+      const qrCodeImage = await QRCode.toDataURL(qrDataString);
+      const mailConfirm = await this.userRepository.findOne({
+        where: { id: createTicketDto.userId },
+      });
+      await this.mailerService.sendMail({
+        to: mailConfirm.email,
+        subject: 'Payment Success Notification',
+        attachDataUrls: true,
+        html: `
+              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Your payment was successful. Thank you for your purchase!</p>
+              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Below is your QR Code for the event:</p>
+              <div style="text-align: center;">
+                  <img src="${qrCodeImage}" alt="QR Code" style="max-width: 100%; height: auto;">
+              </div>
+            `,
+      });
+      return ticket;
     } catch (error) {
       throw new Error('Failed to create ticket');
     }
