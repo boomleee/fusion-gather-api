@@ -67,6 +67,17 @@ export class EventController {
     return this.eventService.findAll({ userId, searchString, category, pageNumber, pageSize, all});
   }
 
+  @Get('/admin')
+  adminFindAll(
+    @Query('searchString') searchString: string = "",
+    @Query('userId') userId: number,
+    @Query('category') category: string = "",
+    @Query('pageNumber') pageNumber: number = 1,
+    @Query('pageSize') pageSize: number = 20,
+  ) {
+    return this.eventService.adminFindAll({ userId, searchString, category, pageNumber, pageSize});
+  }
+
   @Get(':id')
   findOne(@Param('id') id: string) {
     return this.eventService.findOne(+id);

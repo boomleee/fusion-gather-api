@@ -217,6 +217,30 @@ export class EventService {
     return query.getMany();
   }
 
+  async adminFindAll({ userId, searchString, category, pageNumber, pageSize }): Promise<Event[]> {
+    const query = this.eventRepository.createQueryBuilder('event')
+      .innerJoinAndSelect('event.author', 'user');
+    
+    // filter by user
+    if (userId) {
+      query.andWhere('event.author = :userId', { userId: userId });
+    }
+
+    // filter by searchString
+    if (searchString) {
+      query.andWhere('(event.title LIKE :searchString OR event.description LIKE :searchString)', { searchString: `%${searchString}%` });
+    }
+
+    // filter by category
+    if (category) {
+      query.andWhere('event.categoryId = :category', { categoryId: category });
+    }
+
+    // pagination
+    query.skip((pageNumber - 1) * pageSize).take(pageSize);
+    return query.getMany();
+  }
+
   async findOne(id: number): Promise<Event> {
     const existingEvent = await this.eventRepository.findOne({
       relations: {
