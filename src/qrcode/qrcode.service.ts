@@ -5,8 +5,8 @@ import { Repository } from 'typeorm';
 import { Qrcode } from './entities/qrcode.entity';
 import { Event } from 'src/event/entities/event.entity';
 import { Booth } from 'src/booth/entities/booth.entity';
-import { Ticket } from 'src/ticket/entities/ticket.entity';
 import * as QRCode from 'qrcode';
+import { Ticket } from 'src/ticket/entities/ticket.entity';
 
 @Injectable()
 export class QrCodeService {
@@ -89,11 +89,12 @@ export class QrCodeService {
       console.error('Error generating QR Code:', error);
       throw new Error('Internal Server Error');
     }
-  } 
+  }
   async generateAndSaveQRCodeForTicket(ticketId) {
     try {
       // Truy xuất thông tin booth từ cơ sở dữ liệu
-      const ticket = await this.ticketRepository.createQueryBuilder('ticket')
+      const ticket = await this.ticketRepository
+        .createQueryBuilder('ticket')
         .where('ticket.id = :ticketId', { ticketId })
         .getOne();
 
@@ -112,7 +113,7 @@ export class QrCodeService {
       console.error('Error generating QR Code:', error);
       throw new Error('Internal Server Error');
     }
-  } 
+  }
 
   async getQRCodeData(eventId): Promise<any> {
     try {
@@ -164,14 +165,16 @@ export class QrCodeService {
     if (!ticket) {
       throw new NotFoundException(`Ticket ${ticketId} not exist`);
     }
-    if (ticket.eventId.author.id != userId){
-      throw new NotFoundException(`Ticket ${ticketId} not belong to your event`);
+    if (ticket.eventId.author.id != userId) {
+      throw new NotFoundException(
+        `Ticket ${ticketId} not belong to your event`,
+      );
     }
-    if (ticket.isScanned == true){
+    if (ticket.isScanned == true) {
       throw new NotFoundException(`Ticket ${ticketId} has been scanned`);
     }
-    ticket.isScanned = true
-    this.ticketRepository.save(ticket)
-    return ticket
+    ticket.isScanned = true;
+    this.ticketRepository.save(ticket);
+    return ticket;
   }
 }

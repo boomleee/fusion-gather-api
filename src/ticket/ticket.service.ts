@@ -1,29 +1,41 @@
 /* eslint-disable prettier/prettier */
-import { BadRequestException, ForbiddenException, Injectable, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { CreateTicketDto } from './dto/create-ticket.dto';
-import { UpdateTicketDto } from './dto/update-ticket.dto';
 import { Ticket } from './entities/ticket.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { QrCodeService } from 'src/qrcode/qrcode.service';
 import { DeepPartial, Repository } from 'typeorm';
+import { QrCodeService } from 'src/qrcode/qrcode.service';
+import { User } from 'src/user/entities/user.entity';
+import { MailerService } from '@nestjs-modules/mailer';
+import * as QRCode from 'qrcode';
 
 @Injectable()
 export class TicketService {
   constructor(
-    @InjectRepository(Ticket) private readonly ticketRepository: Repository<Ticket>,
-    @InjectRepository(Event) private readonly eventRepository: Repository<Event>,
+    @InjectRepository(Ticket)
+    private readonly ticketRepository: Repository<Ticket>,
+    @InjectRepository(Event)
+    private readonly eventRepository: Repository<Event>,
     private readonly qrCodeService: QrCodeService,
-  ) { }
-
-  create(createTicketDto: CreateTicketDto) {
-    return 'This action adds a new ticket';
-  }
+    @InjectRepository(User)
+    private readonly userRepository: Repository<User>,
+    private mailerService: MailerService,
+  ) {}
 
   findAll() {
     return `This action returns all ticket`;
   }
 
-  async findTicketByEventId(eventId: number, userId: number): Promise<Ticket[]> {
+  async findTicketByEventId(
+    eventId: number,
+    userId: number,
+  ): Promise<Ticket[]> {
     if (isNaN(eventId)) {
       throw new BadRequestException('Invalid event id');
     }
@@ -34,7 +46,8 @@ export class TicketService {
     if (!eventExist) {
       throw new UnauthorizedException('You cannot access this event');
     }
-    const tickets = await this.ticketRepository.createQueryBuilder('ticket')
+    const tickets = await this.ticketRepository
+      .createQueryBuilder('ticket')
       .innerJoinAndSelect('ticket.eventId', 'event')
       .innerJoinAndSelect('ticket.userId', 'user')
       .where('ticket.eventId = :eventId', { eventId })
@@ -45,47 +58,64 @@ export class TicketService {
     return tickets;
   }
 
-  update(id: number, updateTicketDto: UpdateTicketDto) {
-    return `This action updates a #${id} ticket`;
-  }
-
-  async remove(id: number) : Promise<void> {
-    const ticketToRemove = await this.ticketRepository.findOne({ where: { id } });
+  async remove(id: number): Promise<void> {
+    const ticketToRemove = await this.ticketRepository.findOne({
+      where: { id },
+    });
     if (!ticketToRemove) {
       throw new NotFoundException('Ticket not found');
     }
     if (ticketToRemove.isScanned) {
       throw new ForbiddenException('Ticket has been scanned, cannot delete');
-    } 
-      await this.ticketRepository.delete({ id }); 
+    }
+    await this.ticketRepository.delete({ id });
   }
 
-  async checkEventExistByUserId(eventId: number, userId: number): Promise<boolean> {
-    const event = await this.eventRepository.createQueryBuilder('event')
-    .andWhere('event.id = :eventId', { eventId })
-    .andWhere('event.userId = :userId', { userId })
-    .getOne();
+  async checkEventExistByUserId(
+    eventId: number,
+    userId: number,
+  ): Promise<boolean> {
+    const event = await this.eventRepository
+      .createQueryBuilder('event')
+      .andWhere('event.id = :eventId', { eventId })
+      .andWhere('event.userId = :userId', { userId })
+      .getOne();
     if (event) {
       return true;
     }
     return false;
   }
 
-  async createTicketAfterSuccessfulPayment(createTicketDto: CreateTicketDto): Promise<Ticket> {
+  async createTicketAfterSuccessfulPayment(
+    createTicketDto: CreateTicketDto,
+  ): Promise<Ticket> {
     try {
       const ticketPartial: DeepPartial<Ticket> = {
         eventId: { id: createTicketDto.eventId },
-        userId: { id: createTicketDto.userId }, 
-        isScanned: createTicketDto.isScanned, 
+        userId: { id: createTicketDto.userId },
+        isScanned: createTicketDto.isScanned,
       };
-      if (ticketPartial === null) {
-        throw new Error('Invalid ticket data');
-      } else {
-        const qrforticket = await this.qrCodeService.generateAndSaveQRCodeForTicket(ticketPartial);
-        console.log('Ticket QR Code', qrforticket);
-      }
-      return await this.ticketRepository.save(ticketPartial);
+      const ticket = await this.ticketRepository.save(ticketPartial);
 
+      const qrData = { ticketId: ticket.id };
+      const qrDataString = JSON.stringify(qrData);
+      const qrCodeImage = await QRCode.toDataURL(qrDataString);
+      const mailConfirm = await this.userRepository.findOne({
+        where: { id: createTicketDto.userId },
+      });
+      await this.mailerService.sendMail({
+        to: mailConfirm.email,
+        subject: 'Payment Success Notification',
+        attachDataUrls: true,
+        html: `
+              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Your payment was successful. Thank you for your purchase!</p>
+              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Below is your QR Code for the event:</p>
+              <div style="text-align: center;">
+                  <img src="${qrCodeImage}" alt="QR Code" style="max-width: 100%; height: auto;">
+              </div>
+            `,
+      });
+      return ticket;
     } catch (error) {
       throw new Error('Failed to create ticket');
     }

@@ -1,3 +1,4 @@
+/* eslint-disable prettier/prettier */
 import { Module } from '@nestjs/common';
 import { BoothService } from './booth.service';
 import { BoothController } from './booth.controller';
