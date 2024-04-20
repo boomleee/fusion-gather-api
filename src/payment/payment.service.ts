@@ -36,7 +36,7 @@ export class PaymentService {
     try {
       const combinedString = `${eventId}:${userId}`
       const encryptedString = CryptoJS.AES.encrypt(combinedString, process.env.STRIPE_ENCRYPT_KEY).toString()
-
+      const urlParam = encodeURIComponent(encryptedString);
       const ticket = await this.eventRepository
         .createQueryBuilder('event')
         .where('event.id = :eventId', { eventId })
@@ -60,7 +60,7 @@ export class PaymentService {
           },
         ],
         mode: 'payment',
-        success_url: `https://www.fusiongather.me/event/success/${encryptedString}`,
+        success_url: `https://www.fusiongather.me/event/success/${urlParam}`,
         cancel_url: `https://www.fusiongather.me/event/${eventId}`,
       });
       const paymentLink = session.url;
