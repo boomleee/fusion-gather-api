@@ -30,6 +30,11 @@ export class EventController {
     return this.eventService.create(createEventDto, user);
   }
 
+  @Get('statistics/total')
+  getTotalStatistics() {
+    return this.eventService.getTotalStatistic();
+  }
+  
   @Get('/pending')
   findPendingEvents() {
     return this.eventService.findPendingEvent();
@@ -57,8 +62,20 @@ export class EventController {
     @Query('category') category: string = "",
     @Query('pageNumber') pageNumber: number = 1,
     @Query('pageSize') pageSize: number = 20,
+    @Query('all') all: string = ""
   ) {
-    return this.eventService.findAll({ userId, searchString, category, pageNumber, pageSize });
+    return this.eventService.findAll({ userId, searchString, category, pageNumber, pageSize, all});
+  }
+
+  @Get('/admin')
+  adminFindAll(
+    @Query('searchString') searchString: string = "",
+    @Query('userId') userId: number,
+    @Query('category') category: string = "",
+    @Query('pageNumber') pageNumber: number = 1,
+    @Query('pageSize') pageSize: number = 20,
+  ) {
+    return this.eventService.adminFindAll({ userId, searchString, category, pageNumber, pageSize});
   }
 
   @Get(':id')
@@ -70,6 +87,7 @@ export class EventController {
   getEventStatistics(@Param('id') id: string) {
     return this.eventService.getEventStatistics(+id);
   }
+
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateEventDto: UpdateEventDto) {

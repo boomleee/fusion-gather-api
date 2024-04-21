@@ -18,7 +18,8 @@ import { ImageModule } from './image/image.module';
 import { FolloweventModule } from './followevent/followevent.module';
 import { RegisterboothModule } from './registerbooth/registerbooth.module';
 import { PaymentModule } from './payment/payment.module';
-import { WebhookModule } from './Webhook/webhook.module';
+import { WebhookModule } from './webhook/webhook.module';
+import { BoothvisitorModule } from './boothvisitor/boothvisitor.module';
 import * as Joi from '@hapi/joi';
 @Module({
   imports: [
@@ -59,6 +60,7 @@ import * as Joi from '@hapi/joi';
     RegisterboothModule,
     PaymentModule,
     WebhookModule,
+    BoothvisitorModule,
   ],
   controllers: [AppController],
   providers: [AppService],

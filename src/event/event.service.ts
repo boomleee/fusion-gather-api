@@ -18,6 +18,7 @@ import { Ticket } from 'src/ticket/entities/ticket.entity';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
 import { MailerService } from '@nestjs-modules/mailer';
 import { EventStatisticDTO } from './dto/event-statistic.dto';
+import { TotalStatisticDTO } from './dto/total-statistic.dto';
 @Injectable()
 export class EventService {
   constructor(
@@ -166,6 +167,7 @@ export class EventService {
     category,
     pageNumber,
     pageSize,
+    all
   }): Promise<Event[]> {
     const query = this.eventRepository
       .createQueryBuilder('event')
@@ -177,6 +179,12 @@ export class EventService {
         throw new NotFoundException(`User with ID ${userId} not found`);
       }
       query.andWhere('event.author = :userId', { userId: userId });
+      return query.getMany();
+    }
+    if (all) {
+      query.skip((pageNumber - 1) * pageSize).take(pageSize);
+      console.log(all);
+      
       return query.getMany();
     }
 
@@ -206,6 +214,30 @@ export class EventService {
     query.andWhere('event.isPublished = :isPublished', { isPublished: true });
     query.skip((pageNumber - 1) * pageSize).take(pageSize);
 
+    return query.getMany();
+  }
+
+  async adminFindAll({ userId, searchString, category, pageNumber, pageSize }): Promise<Event[]> {
+    const query = this.eventRepository.createQueryBuilder('event')
+      .innerJoinAndSelect('event.author', 'user');
+    
+    // filter by user
+    if (userId) {
+      query.andWhere('event.author = :userId', { userId: userId });
+    }
+
+    // filter by searchString
+    if (searchString) {
+      query.andWhere('(event.title LIKE :searchString OR event.description LIKE :searchString)', { searchString: `%${searchString}%` });
+    }
+
+    // filter by category
+    if (category) {
+      query.andWhere('event.categoryId = :category', { categoryId: category });
+    }
+
+    // pagination
+    query.skip((pageNumber - 1) * pageSize).take(pageSize);
     return query.getMany();
   }
 
@@ -248,6 +280,25 @@ export class EventService {
       totalTickets,
       totalVisitors,
       eventRevenue
+    };
+  }
+
+  async getTotalStatistic(): Promise<TotalStatisticDTO> {
+    const totalBooths = await this.boothRepository.count();
+    const totalTickets = await this.ticketRepository.count();
+    const totalVisitors = await this.ticketRepository.count({
+      where: { isScanned: true },
+    });
+    const totalEvents = await this.eventRepository.count();
+    const totalUsers = await this.userRepository.createQueryBuilder('user')
+      .where('user.isAdmin = :isAdmin', { isAdmin: false })
+      .getCount();
+    return {
+      totalBooths,
+      totalTickets,
+      totalVisitors,
+      totalEvents,
+      totalUsers,
     };
   }
 

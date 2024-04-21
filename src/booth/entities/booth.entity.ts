@@ -38,6 +38,6 @@ export class Booth {
     @Column()
     name: string;
 
-    @Column()
+    @Column('text')
     description: string;
 }
