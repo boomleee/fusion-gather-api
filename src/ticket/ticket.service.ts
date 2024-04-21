@@ -95,7 +95,13 @@ export class TicketService {
         userId: { id: createTicketDto.userId },
         isScanned: createTicketDto.isScanned,
       };
+
       const ticket = await this.ticketRepository.save(ticketPartial);
+
+      const ticketData = await this.ticketRepository.createQueryBuilder('ticket')
+        .innerJoinAndSelect('ticket.eventId', 'event')
+        .where('ticket.id = :ticketId', { ticketId: ticket.id })
+        .getOne();
 
       const qrData = { ticketId: ticket.id };
       const qrDataString = JSON.stringify(qrData);
@@ -109,7 +115,7 @@ export class TicketService {
         attachDataUrls: true,
         html: `
               <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Your payment was successful. Thank you for your purchase!</p>
-              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Below is your QR Code for the event:</p>
+              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Below is your QR Code for the event <strong>${ticketData.eventId.title}</strong>:</p>
               <div style="text-align: center;">
                   <img src="${qrCodeImage}" alt="QR Code" style="max-width: 100%; height: auto;">
               </div>
