@@ -256,9 +256,16 @@ export class EventService {
 
   async getEventStatistics(id: number, userId: number): Promise<EventStatisticDTO> {
     // check if user is owner of event
+    const isEventExist = await this.eventRepository.findOne({
+      where: { id: Equal(id) },
+    });
+ 
     const isOwnerOfEvent = await this.eventRepository.findOne({
       where: { id: Equal(id), author: Equal(userId) },
     });
+    if (!isEventExist) {
+      throw new NotFoundException(`Event with ID ${id} not found`);
+    }
     if (!isOwnerOfEvent) {
       throw new UnauthorizedException(`You are not owner of this event`);
     }
