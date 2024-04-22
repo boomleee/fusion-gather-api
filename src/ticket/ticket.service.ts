@@ -93,7 +93,7 @@ export class TicketService {
   async createTicketAfterSuccessfulPayment(
     createTicketDto: CreateTicketDto,
   ): Promise<Ticket> {
-    try {
+  
       const ticketPartial: DeepPartial<Ticket> = {
         eventId: { id: createTicketDto.eventId },
         userId: { id: createTicketDto.userId },
@@ -126,8 +126,6 @@ export class TicketService {
             `,
       });
       return ticket;
-    } catch (error) {
-      throw new Error('Failed to create ticket');
-    }
+
   }
 }
