@@ -1,8 +1,11 @@
 /* eslint-disable prettier/prettier */
-import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UsePipes, ValidationPipe, UseGuards } from '@nestjs/common';
 import { TicketService } from './ticket.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';
+import { AuthGuard } from 'src/guards/auth.guard';
+import { GetUser } from 'src/decorator/getUser.decorator';
+import { User } from 'src/user/entities/user.entity';
 
 
 @Controller('ticket')
@@ -14,10 +17,11 @@ export class TicketController {
     return this.ticketService.findAll();
   }
 
-  @Get('event/:eventId/:userId')
+  @Get('event/:eventId')
+  @UseGuards(AuthGuard)
   @UsePipes(ValidationPipe)
-  findOne(@Param('eventId') eventId: string, @Param('userId') userId: string) {
-    return this.ticketService.findTicketByEventId(+eventId, +userId);
+  findOne(@Param('eventId') eventId: string, @GetUser() user: User) {
+    return this.ticketService.findTicketByEventId(+eventId, user);
   }
 
   @Delete(':id')
