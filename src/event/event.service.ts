@@ -269,13 +269,18 @@ export class EventService {
     if (!isOwnerOfEvent) {
       throw new UnauthorizedException(`You are not owner of this event`);
     }
+
+    // count total booths
     const totalBooths = await this.boothRepository.count({
       where: { eventId: Equal(id) },
     });
+
+    // count total tickets
     const totalTickets = await this.ticketRepository.count({
       where: { eventId: Equal(id) },
     });
 
+    // count total visitors
     const totalVisitors = await this.ticketRepository.count({
       where: { eventId: Equal(id),
               isScanned: true
@@ -286,8 +291,8 @@ export class EventService {
       where: { id },
       select: ['price'],
     });
-    
-    const eventRevenue = totalVisitors * Number(event.price);
+    //calculate event revenue
+    const eventRevenue = totalTickets * Number(event.price);
 
     return {
       totalBooths,

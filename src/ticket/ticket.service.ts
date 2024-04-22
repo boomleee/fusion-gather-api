@@ -9,11 +9,12 @@ import {
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { Ticket } from './entities/ticket.entity';
 import { InjectRepository } from '@nestjs/typeorm';
-import { DeepPartial, Repository } from 'typeorm';
+import { DeepPartial, Equal, FindOptionsWhere, In, Repository } from 'typeorm';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
 import { User } from 'src/user/entities/user.entity';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as QRCode from 'qrcode';
+import { equal } from 'assert';
 
 @Injectable()
 export class TicketService {
@@ -22,7 +23,6 @@ export class TicketService {
     private readonly ticketRepository: Repository<Ticket>,
     @InjectRepository(Event)
     private readonly eventRepository: Repository<Event>,
-    private readonly qrCodeService: QrCodeService,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
     private mailerService: MailerService,
@@ -34,16 +34,19 @@ export class TicketService {
 
   async findTicketByEventId(
     eventId: number,
-    userId: number,
+    user: User,
   ): Promise<Ticket[]> {
     if (isNaN(eventId)) {
       throw new BadRequestException('Invalid event id');
     }
-    if (isNaN(userId)) {
-      throw new BadRequestException('Invalid user id');
+    const isEventExist = await this.eventRepository.findOne({
+      where: { id: eventId } as FindOptionsWhere<Event>,
+    });
+    if(!isEventExist) {
+      throw new NotFoundException('Event not found');
     }
-    const eventExist = await this.checkEventExistByUserId(eventId, userId);
-    if (!eventExist) {
+    const isOwner = await this.checkEventExistByUserId(eventId, user.id);
+    if (!isOwner) {
       throw new UnauthorizedException('You cannot access this event');
     }
     const tickets = await this.ticketRepository
@@ -53,7 +56,8 @@ export class TicketService {
       .where('ticket.eventId = :eventId', { eventId })
       .getMany();
     if (tickets.length === 0) {
-      throw new NotFoundException(`No ticket found for event ${eventId}`);
+      const ticketBlank = []
+      return ticketBlank;
     }
     return tickets;
   }
