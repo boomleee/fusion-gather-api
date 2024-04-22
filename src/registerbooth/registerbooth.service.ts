@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateRegisterboothDto } from './dto/create-registerbooth.dto';
 import { UpdateRegisterboothDto } from './dto/update-registerbooth.dto';
@@ -104,11 +105,21 @@ export class RegisterboothService {
     else return false;
   }
 
-  async findAllRequestByEventId(eventId: number) {
+  async findAllRequestByEventId(eventId: number, userId: number) {
     const isEventExist = await this.checkEventExist(eventId);
+    const event = await this.eventRepository.findOne({
+      relations: {
+        author: true,
+      },
+      where: { id: eventId },
+    });
 
     if (!isEventExist) {
       throw new NotFoundException(`Event with ID ${eventId} not exist`);
+    }
+
+    if (event.author.id !== userId) {
+      throw new UnauthorizedException(`You are not the owner of this event`);
     }
 
     const registerbooth = await this.registerboothRepository

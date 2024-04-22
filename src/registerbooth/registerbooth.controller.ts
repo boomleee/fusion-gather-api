@@ -1,7 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards } from '@nestjs/common';
 import { RegisterboothService } from './registerbooth.service';
 import { CreateRegisterboothDto } from './dto/create-registerbooth.dto';
 import { UpdateRegisterboothDto } from './dto/update-registerbooth.dto';
+import { AuthGuard } from 'src/guards/auth.guard';
+import { GetUser } from 'src/decorator/getUser.decorator';
+import { User } from 'src/user/entities/user.entity';
 
 @Controller('registerbooth')
 export class RegisterboothController {
@@ -18,8 +21,9 @@ export class RegisterboothController {
   }
 
   @Get(':eventid')
-  findAllByEventId(@Param('eventid') eventid: string) {
-    return this.registerboothService.findAllRequestByEventId(+eventid);
+  @UseGuards(AuthGuard)
+  findAllByEventId(@Param('eventid') eventid: string, @GetUser() user: User) {
+    return this.registerboothService.findAllRequestByEventId(+eventid, user.id);
   }
 
   @Get(':userid/:eventid')
