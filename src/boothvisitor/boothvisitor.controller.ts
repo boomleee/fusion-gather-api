@@ -22,7 +22,6 @@ export class BoothvisitorController {
   getBoothMonitoring(
     @Param('eventId') eventId: string,
   ): Promise<BoothResult[]> {
-    console.log(eventId);
     return this.boothvisitorService.getBoothMonitoring(+eventId);
   }
   @Post()

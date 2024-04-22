@@ -9,6 +9,7 @@ import {
   Delete,
   UseGuards,
   Query,
+  Request,
 } from '@nestjs/common';
 import { EventService } from './event.service';
 import { CreateEventDto } from './dto/create-event.dto';
@@ -16,6 +17,7 @@ import { UpdateEventDto } from './dto/update-event.dto';
 import { GetUser } from 'src/decorator/getUser.decorator';
 import { AuthGuard } from 'src/guards/auth.guard';
 import { User } from 'src/user/entities/user.entity';
+
 
 @Controller('event')
 export class EventController {
@@ -84,8 +86,9 @@ export class EventController {
   }
 
   @Get('statistics/:id')
-  getEventStatistics(@Param('id') id: string) {
-    return this.eventService.getEventStatistics(+id);
+  @UseGuards(AuthGuard)
+  getEventStatistics(@Param('id') id: string, @GetUser() user: User){
+    return this.eventService.getEventStatistics(+id, user.id);
   }
 
 
