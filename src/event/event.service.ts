@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, NotAcceptableException, NotFoundException } from '@nestjs/common';
+import { Injectable, NotAcceptableException, NotFoundException, UnauthorizedException } from '@nestjs/common';
 import { CreateEventDto } from './dto/create-event.dto';
 import { UpdateEventDto } from './dto/update-event.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -254,7 +254,14 @@ export class EventService {
     return existingEvent;
   }
 
-  async getEventStatistics(id: number): Promise<EventStatisticDTO> {
+  async getEventStatistics(id: number, userId: number): Promise<EventStatisticDTO> {
+    // check if user is owner of event
+    const isOwnerOfEvent = await this.eventRepository.findOne({
+      where: { id: Equal(id), author: Equal(userId) },
+    });
+    if (!isOwnerOfEvent) {
+      throw new UnauthorizedException(`You are not owner of this event`);
+    }
     const totalBooths = await this.boothRepository.count({
       where: { eventId: Equal(id) },
     });
