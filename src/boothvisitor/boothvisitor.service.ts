@@ -48,7 +48,7 @@ export class BoothvisitorService {
       .where('ticket.userId = :userId', { userId })
       .andWhere('ticket.eventId = :eventId', { eventId: booth.eventId.id })
       .getOne();
-    if (ticket) {
+    if (ticket && ticket.isScanned) {
       const record: DeepPartial<Boothvisitor> = {
         boothId: boothId,
         userId: userId,
