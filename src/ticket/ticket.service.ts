@@ -151,10 +151,10 @@ export class TicketService {
       html: `
               <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Your payment was successful. Thank you for your purchase!</p>
               <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Below is your QR Code for the event <strong>${ticketData.eventId.title}</strong>:</p>
+              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Event start: <strong>${formattedDateTime}</strong></p>
               <div style="text-align: center;">
                   <img src="${qrCodeImage}" alt="QR Code" style="max-width: 100%; height: auto;">
               </div>
-              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Event start: ${formattedDateTime}</p>
             `,
     });
     return ticket;
@@ -200,10 +200,10 @@ export class TicketService {
       html: `
               <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">You have successfully register an event!</p>
               <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Below is your QR Code for the event <strong>${ticketData.eventId.title}</strong>:</p>
+              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Event start: <strong>${formattedDateTime}</strong></p>
               <div style="text-align: center;">
                   <img src="${qrCodeImage}" alt="QR Code" style="max-width: 100%; height: auto;">
               </div>
-              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Event start: ${formattedDateTime}</p>
             `,
     });
     return ticket;
