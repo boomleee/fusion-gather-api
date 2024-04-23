@@ -5,6 +5,7 @@ import { Boothvisitor } from './entities/boothvisitor.entity';
 import { Repository, DeepPartial, Equal } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Booth } from 'src/booth/entities/booth.entity';
+import { Ticket } from 'src/ticket/entities/ticket.entity';
 interface BoothResult {
   id: number;
   name: string;
@@ -17,6 +18,8 @@ export class BoothvisitorService {
     private readonly boothVisitorRepository: Repository<Boothvisitor>,
     @InjectRepository(Booth)
     private readonly boothRepository: Repository<Booth>,
+    @InjectRepository(Ticket)
+    private readonly ticketRepository: Repository<Ticket>,
   ) {}
   create(createBoothvisitorDto: CreateboothvisitorDto) {}
 
@@ -36,11 +39,23 @@ export class BoothvisitorService {
     return `This action removes a #${id} boothvisitor`;
   }
   async visit(userId: number, boothId: number) {
-    const record: DeepPartial<Boothvisitor> = {
-      boothId: boothId,
-      userId: userId,
-    };
-    return await this.boothVisitorRepository.save(record);
+    const booth = await this.boothRepository.findOne({
+      where: { id: boothId },
+      relations: ['eventId'],
+    });
+    const ticket = await this.ticketRepository
+      .createQueryBuilder('ticket')
+      .where('ticket.userId = :userId', { userId })
+      .andWhere('ticket.eventId = :eventId', { eventId: booth.eventId.id })
+      .getOne();
+    if (ticket) {
+      const record: DeepPartial<Boothvisitor> = {
+        boothId: boothId,
+        userId: userId,
+      };
+      return await this.boothVisitorRepository.save(record);
+    }
+    return;
   }
 
   async getBoothMonitoring(eventId: number): Promise<BoothResult[]> {
