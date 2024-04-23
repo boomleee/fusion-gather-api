@@ -41,7 +41,7 @@ export class AccountService {
     if (account) return true;
     else return false;
   }
-
+  // create an account in db
   async create(registerDto: RegisterDto) {
     const createUserDto: CreateUserDto = {
       firstName: registerDto.firstName,
@@ -50,22 +50,26 @@ export class AccountService {
       dob: registerDto.dob,
       phoneNumber: registerDto.phoneNumber,
     };
+    // check if username exist
     const isUsernameExist = await this.checkUsernameExist(registerDto.username);
 
     if (isUsernameExist) {
       throw new NotFoundException(`Username ${registerDto.username} exist`);
     }
 
+    // create user in db
     const user = await this.userService.create(createUserDto);
 
     const hashPassword = await this.hashPassword(registerDto.password);
-
+    // send verification code to email
     const verificationCode = this.generateVerificationCode();
     await this.mailerService.sendMail({
       to: registerDto.email,
       subject: 'Welcome to my website',
       html: `<b>Your Verification Code is: ${verificationCode}  </b>`,
     });
+
+    //create account in db
     const newAccount = this.accountRepository.create({
       user: user,
       username: registerDto.username,
@@ -122,6 +126,7 @@ export class AccountService {
     return await this.accountRepository.save(existingAccount);
   }
 
+  // change account isActived status
   async disableAccount(id: number): Promise<Account> {
     if (id === null) {
       throw new BadRequestException(`Account ID is required`);
@@ -181,6 +186,8 @@ export class AccountService {
     }
     return verificationCode;
   }
+
+  // verify account after register or reset password
   async verifyAccount(verifyAccountDto: VerifyAccountDto) {
     const existingAcount = await this.accountRepository.findOne({
       where: { username: verifyAccountDto.username },
@@ -193,8 +200,11 @@ export class AccountService {
     } else return new NotFoundException(`Can't verify`);
   }
 
+  // reset password
   async requestResetPassword(resetRequestDto: ResetRequestDto) {
+    // generate verification code
     const verificationCode = this.generateVerificationCode();
+    // find account by email and send verification code to email
     const account = await this.findAccountByEmail(resetRequestDto.email);
     if (account) {
       await this.mailerService.sendMail({
@@ -207,6 +217,7 @@ export class AccountService {
     } else return new NotFoundException(`Email not found`);
   }
 
+  // find account by email
   async findAccountByEmail(email: string) {
     const account = await this.accountRepository
       .createQueryBuilder('as')
@@ -215,6 +226,8 @@ export class AccountService {
       .getOne();
     return account;
   }
+
+  // check verification code
   async checkVerificationCode(
     resetPasswordCodeDto: ResetPasswordCodeDto,
   ): Promise<boolean> {
@@ -224,13 +237,19 @@ export class AccountService {
     } else return false;
   }
 
+  // change password
   async changePassword(changePasswordDto: ChangePasswordDto): Promise<Account> {
     const { email, newPassword } = changePasswordDto;
+
+    // find account by input email
     const existingAccount = await this.findAccountByEmail(email);
     if (!existingAccount) {
       throw new NotFoundException(`Account with ID ${email} not found`);
     }
+
+    // hash new password
     const hashPassword = await this.hashPassword(newPassword);
+    // save new password
     existingAccount.password = hashPassword;
 
     return await this.accountRepository.save(existingAccount);
@@ -255,6 +274,7 @@ export class AccountService {
     };
   }
 
+  // login
   async login(loginDto: LoginDto) {
     const account = await this.accountRepository.findOne({
       where: { username: loginDto.username },
@@ -270,9 +290,15 @@ export class AccountService {
     if (!account.isActivated) {
       throw new NotFoundException('Account is disabled');
     }
+
+    if (!account.isVerified) {
+      throw new NotFoundException('Account is not verified');
+    }
     const payload = { id: account.id };
     return this.generateToken(payload);
   }
+
+  // admin login
   async adminLogin(loginDto: LoginDto) {
     const account = await this.accountRepository.findOne({
       where: { username: loginDto.username },
@@ -296,6 +322,7 @@ export class AccountService {
     return this.generateToken(payload);
   }
 
+  // refresh token for logout
   async refreshToken(id: number) {
     return this.generateToken({ id });
   }

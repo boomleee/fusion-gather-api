@@ -60,6 +60,7 @@ export class UserService {
   return true; // Date is valid
   }
 
+  // create user
   async create(createUserDto: CreateUserDto) {
     const isEmailExist = await this.checkEmailExist(createUserDto.email);
     const isPhoneNumberExist = await this.checkPhoneNumberExist(
@@ -95,6 +96,7 @@ export class UserService {
     return existingUser;
   }
 
+  // update user
   async update(id: number, updateUserDto: UpdateUserDto,): Promise<User> {
     const isDateValidate = await this.checkIsDateValid(updateUserDto.dob);
     if(updateUserDto.sessionUserId !== id) {
@@ -112,6 +114,7 @@ export class UserService {
     return await this.userRepository.save(existingUser);
   }
 
+  // remove user
   async remove(id: number): Promise<void> {
     const userToRemove = await this.userRepository.findOne({ where: { id } });
 

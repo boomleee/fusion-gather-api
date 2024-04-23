@@ -54,6 +54,7 @@ export class EventService {
     else return false;
   }
 
+  // create event
   async create(createEventDto: CreateEventDto, user: User) {
     try {
       const isEventTitleExist = await this.checkEventTitleExist(
@@ -161,6 +162,7 @@ export class EventService {
     else return false;
   }
 
+  // find all published events
   async findAll({
     userId,
     searchString,
@@ -217,6 +219,7 @@ export class EventService {
     return query.getMany();
   }
 
+  // find all events for admin
   async adminFindAll({ userId, searchString, category, pageNumber, pageSize }): Promise<Event[]> {
     const query = this.eventRepository.createQueryBuilder('event')
       .innerJoinAndSelect('event.author', 'user');
@@ -254,6 +257,7 @@ export class EventService {
     return existingEvent;
   }
 
+  // get one event statistics
   async getEventStatistics(id: number, userId: number): Promise<EventStatisticDTO> {
     // check if user is owner of event
     const isEventExist = await this.eventRepository.findOne({
@@ -302,6 +306,7 @@ export class EventService {
     };
   }
 
+  // get total statistics of all events
   async getTotalStatistic(): Promise<TotalStatisticDTO> {
     const totalBooths = await this.boothRepository.count();
     const totalTickets = await this.ticketRepository.count();
@@ -321,18 +326,21 @@ export class EventService {
     };
   }
 
+  // find all pending events
   async findPendingEvent(): Promise<Event[]> {
     const query = this.eventRepository.createQueryBuilder('event');
     query.andWhere('event.isPublished = :isPublished', { isPublished: false });
     return query.getMany();
   }
 
+  // find all published events
   async findPublishedEvent(): Promise<Event[]> {
     const query = this.eventRepository.createQueryBuilder('event');
     query.andWhere('event.isPublished = :isPublished', { isPublished: true });
     return query.getMany();
   }
 
+  // publish event
   async publishEvent(id: number): Promise<Event> {
     const existingEvent = await this.eventRepository.findOne({ where: { id } });
 
@@ -344,12 +352,14 @@ export class EventService {
       throw new NotAcceptableException(`Event is already published`);
     }
 
+    // get all followers of event
     const follower = await this.followeventRepository
       .createQueryBuilder('followevent')
       .innerJoinAndSelect('followevent.user', 'user')
       .where('followevent.eventId = :id', { id })
       .getMany();
 
+    // get all vendor request of event
       const vendorRequest = await this.registerboothRepository.createQueryBuilder('registerbooth')
       .leftJoinAndSelect('registerbooth.user', 'user')
       .leftJoinAndSelect('registerbooth.booth', 'booth')
@@ -365,6 +375,7 @@ export class EventService {
       existingEvent.isPublished = true;
     } 
 
+    // send notification to followers and vendors
     if (existingEvent.isPublished) {
       if (follower.length > 0) {
       follower.forEach(async (follow) => {
@@ -406,6 +417,7 @@ export class EventService {
     return await this.eventRepository.save(existingEvent);
   }
 
+  // find latest 3 events
   async findLatestEvent(): Promise<Event[]> {
     const currentDate = new Date().toISOString();
     const events = await this.eventRepository.find({
@@ -422,6 +434,7 @@ export class EventService {
     return events;
   }
 
+  //update event
   async update(id: number, updateEventDto: UpdateEventDto): Promise<Event> {
     const existingEvent = await this.eventRepository.findOne({ where: { id } });
 
@@ -510,6 +523,7 @@ export class EventService {
     }
     Object.assign(existingEvent, dtoWithoutImage);
 
+    // send notification to followers of event is published
     if (existingEvent.isPublished) {
       if (follower.length > 0) {
         follower.forEach(async (follow) => {
@@ -532,13 +546,14 @@ export class EventService {
     return await this.eventRepository.save(existingEvent);
   }
 
+  //delete event
   async remove(id: number): Promise<void> {
     const eventToRemove = await this.eventRepository.findOne({ where: { id } });
 
     if (!eventToRemove) {
       throw new NotFoundException(`Event with ID ${id} not found`);
     }
-
+    // get all booth of event
     const boothToRemove = await this.boothRepository
       .createQueryBuilder('booth')
       .where('booth.eventId = :id', { id })
@@ -557,6 +572,7 @@ export class EventService {
           });
         }
 
+        // get all qrcode to remove
         const qrcodeToRemove = await this.qrCodeRepository
           .createQueryBuilder('qrcode')
           .where('qrcode.boothId = :id', { id: booth.id })
@@ -566,6 +582,7 @@ export class EventService {
           await this.qrCodeRepository.remove(qrcodeToRemove);
         }
 
+        // get all image of booth to remove
         const imageBoothToRemove = await this.imageRepository
           .createQueryBuilder('image')
           .where('image.boothId = :boothid', {
@@ -579,6 +596,9 @@ export class EventService {
         }
       });
     }
+
+    // get all image, followevent, ticket, qrcode to remove
+
     const imageToRemove = await this.imageRepository
       .createQueryBuilder('image')
       .where('image.eventId = :id', { id })
@@ -627,9 +647,11 @@ export class EventService {
       });
     }
 
+    // after all above removed, remove event
     await this.eventRepository.remove(eventToRemove);
   }
 
+  // remove images by event id
   async removeImagesByEventId(eventId): Promise<void> {
     const imagesToRemove = await this.imageRepository
       .createQueryBuilder('image')

@@ -211,7 +211,6 @@ export class BoothService {
       });
     }
   }
-
   async update(
     userId: number,
     boothId: number,
@@ -273,6 +272,7 @@ export class BoothService {
     return await this.boothRepository.save(existingBooth);
   }
 
+  // assign booth to vendor
   async assignBoothToUser(userId: number, boothId: number) {
     const isUserExist = await this.checkUserExist(userId);
     const isBoothExist = await this.checkBoothExist(boothId);
@@ -285,11 +285,13 @@ export class BoothService {
       throw new NotFoundException(`Booth ${boothId} not exist`);
     }
 
+    // check if vendor is already owner of the booth
     const isBoothAuthor = await this.checkBoothAuthor(boothId, userId);
     if (isBoothAuthor) {
       throw new ConflictException('You are already the owner of this booth');
     }
 
+    // get the booth info
     const existingBooth = await this.boothRepository
       .createQueryBuilder('booth')
       .innerJoinAndSelect('booth.vendorId', 'user')
@@ -297,6 +299,7 @@ export class BoothService {
       .where('booth.id = :boothId', { boothId })
       .getOne();
 
+      // get the vendor info
     const vendor = await this.registerboothRepository
       .createQueryBuilder('registerbooth')
       .innerJoinAndSelect('registerbooth.user', 'user')
@@ -308,7 +311,10 @@ export class BoothService {
       throw new NotFoundException(`Booth with ID ${boothId} not found`);
     }
 
+    // update new vendor as the owner of the booth
     existingBooth.vendorId.id = userId;
+
+    // send notification to the new vendor
     await this.mailerService.sendMail({
       to: vendor.user.email,
       subject: 'Booth Ownership Transfer',
@@ -322,6 +328,7 @@ export class BoothService {
     return await this.boothRepository.save(existingBooth);
   }
 
+  // delete booth
   async remove(userId: number, boothId: number): Promise<void> {
     const isUserExist = await this.checkUserExist(userId);
     const isBoothExist = await this.checkBoothExist(boothId);
@@ -334,6 +341,7 @@ export class BoothService {
       throw new NotFoundException(`Booth ${boothId} not exist`);
     }
 
+    // get booth info
     const boothToRemove = await this.boothRepository
       .createQueryBuilder('booth')
       .where('booth.id = :boothId', { boothId })
@@ -343,6 +351,7 @@ export class BoothService {
       throw new NotFoundException(`Booth with ID ${boothId} not found`);
     }
 
+    // delete vendor request of the booth
     const requestedBooth = await this.registerboothRepository
       .createQueryBuilder('registerbooth')
       .where('registerbooth.boothId = :boothId', { boothId })
@@ -355,6 +364,7 @@ export class BoothService {
     ));
     }
 
+    // delete booth images and qrcode
     const imageBoothToRemove = await this.imageRepository
       .createQueryBuilder('image')
       .where('image.boothId = :boothId', { boothId })
@@ -374,6 +384,8 @@ export class BoothService {
     if (qrcodeToRemove) {
       await this.qrcodeRepository.remove(qrcodeToRemove);
     }
+
+    // after all above deleted, delete the booth
     await this.boothRepository.remove(boothToRemove);
     console.log(`Booth with ID ${boothId} has been deleted successfully.`);
   }

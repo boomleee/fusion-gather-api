@@ -21,20 +21,21 @@ export class QrCodeService {
     private readonly ticketRepository: Repository<Ticket>,
   ) {}
 
+  // Generate and save QR Code for an Event
   async generateAndSaveQRCode(eventId): Promise<string> {
     try {
-      // Kiểm tra xem QR Code đã được tạo cho EventID này chưa
+      // Check if QR Code has been generated for this EventID
       const existingQrCode = await this.qrcodeRepository
         .createQueryBuilder('qrcode')
         .where('qrcode.eventId = :eventId', { eventId })
         .getOne();
 
       if (existingQrCode != null) {
-        // Nếu đã tồn tại QR Code cho EventID này, trả về mã QR Code đã có
+        // If QR Code exists for this EventID, return the existing QR Code
         return await QRCode.toDataURL(existingQrCode);
       }
 
-      // Nếu chưa có QR Code cho EventID này, tiếp tục tạo mới và lưu vào cơ sở dữ liệu
+      // If QR Code does not exist for this EventID, continue to generate and save to the database
       const qrData = { eventId };
       const qrDataString = JSON.stringify(qrData);
       const qrCodeImage = await QRCode.toDataURL(qrDataString);
@@ -51,9 +52,10 @@ export class QrCodeService {
     }
   }
 
+  // Generate and save QR Code for a Booth
   async generateAndSaveQRCodeForBooth(boothId): Promise<string> {
     try {
-      // Truy xuất thông tin booth từ cơ sở dữ liệu
+      // Fetch booth information from the database
       const booth = await this.boothRepository
         .createQueryBuilder('booth')
         .where('booth.id = :boothId', { boothId })
@@ -63,18 +65,18 @@ export class QrCodeService {
         throw new Error('Booth not found');
       }
 
-      // Kiểm tra xem QR Code đã được tạo cho Booth này chưa
+      // Check if QR Code has been generated for this Booth
       const existingQrCode = await this.qrcodeRepository
         .createQueryBuilder('qrcode')
         .where('qrcode.boothId = :boothId', { boothId })
         .getOne();
 
       if (existingQrCode != null) {
-        // Nếu đã tồn tại QR Code cho Booth này, trả về mã QR Code đã có
+        // If QR Code exists for this Booth, return the existing QR Code
         return await QRCode.toDataURL(existingQrCode);
       }
 
-      // Nếu chưa có QR Code cho Booth này, tiếp tục tạo mới và lưu vào cơ sở dữ liệu
+      // If QR Code does not exist for this Booth, continue to generate and save to the database
       const qrData = { boothId };
       const qrDataString = JSON.stringify(qrData);
       const qrCodeImage = await QRCode.toDataURL(qrDataString);
@@ -90,9 +92,11 @@ export class QrCodeService {
       throw new Error('Internal Server Error');
     }
   }
+
+  // Generate and save QR Code for a Ticket
   async generateAndSaveQRCodeForTicket(ticketId) {
     try {
-      // Truy xuất thông tin booth từ cơ sở dữ liệu
+      // Fetch ticket information from the database
       const ticket = await this.ticketRepository
         .createQueryBuilder('ticket')
         .where('ticket.id = :ticketId', { ticketId })
@@ -102,7 +106,7 @@ export class QrCodeService {
         throw new Error('Ticket not found');
       }
 
-      // Nếu chưa có QR Code cho Booth này, tiếp tục tạo mới và lưu vào cơ sở dữ liệu
+      // If QR Code does not exist for this Ticket, continue to generate and save to the database
       const qrData = { ticketId: ticketId };
       const qrDataString = JSON.stringify(qrData);
       const qrCodeImage = await QRCode.toDataURL(qrDataString);
@@ -115,9 +119,10 @@ export class QrCodeService {
     }
   }
 
+  // Get QR Code data for an Event
   async getQRCodeData(eventId): Promise<any> {
     try {
-      // Truy xuất dữ liệu QRCode từ cơ sở dữ liệu
+      // Fetch QRCode data from the database
       const qrcode = await this.qrcodeRepository
         .createQueryBuilder('qrcode')
         .where('qrcode.eventId = :eventId', { eventId })
@@ -136,9 +141,10 @@ export class QrCodeService {
     }
   }
 
+  // Get QR Code data for a Booth
   async getQRCodeDataForBooth(boothId): Promise<any> {
     try {
-      // Truy xuất dữ liệu QRCode từ cơ sở dữ liệu
+      // Fetch QRCode data from the database
       const qrcode = await this.qrcodeRepository
         .createQueryBuilder('qrcode')
         .where('qrcode.boothId = :boothId', { boothId })
@@ -157,6 +163,7 @@ export class QrCodeService {
     }
   }
 
+  // Check ticket and mark it as scanned
   async checkTicket(userId: number, ticketId: number) {
     const ticket = await this.ticketRepository.findOne({
       where: { id: ticketId },

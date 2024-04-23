@@ -5,6 +5,7 @@ import {
   Param,
   BadRequestException,
   UseGuards,
+  ForbiddenException,
 } from '@nestjs/common';
 import { PaymentService } from './payment.service';
 import { AuthGuard } from 'src/guards/auth.guard';
@@ -28,13 +29,17 @@ export class PaymentController {
         throw new BadRequestException('User id is missing');
       }
 
-      // Gọi phương thức checkout từ PaymentService và truyền eventId
+     const isBuyTicket = await this.paymentService.checkIsBuyTicket(eventId, userId);
+      if (isBuyTicket) {
+        throw new ForbiddenException('You have already bought this ticket');
+      }
+      // Call method checkout from PaymentService and pass eventId
       const paymentIntent = await this.paymentService.checkout(eventId, userId);
-      // Trả về kết quả cho client
+      // Return to client
       return { success: true, paymentLink: paymentIntent.paymentLink };
     } catch (error) {
-      // Xử lý lỗi và trả về cho client
-      return { success: false, error: error.message };
+      // Handle error and return to client
+      return { success: false, error: error.message, statusCode: error.status };
     }
   }
 }
