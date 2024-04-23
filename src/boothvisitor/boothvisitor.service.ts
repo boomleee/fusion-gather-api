@@ -38,6 +38,8 @@ export class BoothvisitorService {
   remove(id: number) {
     return `This action removes a #${id} boothvisitor`;
   }
+
+  // attendee visit a booth
   async visit(userId: number, boothId: number) {
     const booth = await this.boothRepository.findOne({
       where: { id: boothId },
@@ -58,6 +60,7 @@ export class BoothvisitorService {
     return;
   }
 
+  // get all booths with count of visitors
   async getBoothMonitoring(eventId: number): Promise<BoothResult[]> {
     //get all booths(id, name)
     const booths = await this.boothRepository

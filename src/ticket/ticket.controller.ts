@@ -38,4 +38,14 @@ export class TicketController {
     };
     return this.ticketService.createTicketAfterSuccessfulPayment(newCreateTicketDto);
   }
+
+  @Post('createFree')
+  createFreeTicket(@Body() createTicketDto: CreateTicketDto) {
+    const newCreateTicketDto: CreateTicketDto = {
+      eventId: Number(createTicketDto.eventId),
+      userId: Number(createTicketDto.userId),
+      isScanned: false
+    };
+    return this.ticketService.createFreeTicket(newCreateTicketDto);
+  }
 }

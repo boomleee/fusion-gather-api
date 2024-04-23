@@ -31,6 +31,7 @@ export class FolloweventService {
     else return false;
   }
 
+    // Follow event
     async create(createFolloweventDto: CreateFolloweventDto) {
     const user = await this.userRepository.findOne({
       where: { id: createFolloweventDto.userId },
@@ -73,6 +74,7 @@ export class FolloweventService {
     return await this.followeventRepository.find();
   }
 
+  // get all events followed by user
   async findFEventByUser(userId: number):Promise<Followevent[]> {
     const eventfollow = await this.followeventRepository.createQueryBuilder('followevent')
     .innerJoinAndSelect('followevent.event', 'event')
@@ -86,6 +88,7 @@ export class FolloweventService {
     return eventfollow;
   }
 
+  // count number of users follow event
   async countUserFollowEvent(eventId: number): Promise<number> {
     const count = await this.followeventRepository.createQueryBuilder('followevent')
     .where('followevent.eventId = :eventId', { eventId })
@@ -94,6 +97,7 @@ export class FolloweventService {
     return count;
   }
 
+  // check if user follow event
   async checkisUserFollowEvent(userId: number, eventId: number): Promise<boolean> {
     const followevent = await this.followeventRepository.createQueryBuilder('followevent')
     .where('followevent.userId = :userId', { userId })
@@ -107,6 +111,7 @@ export class FolloweventService {
     }
   }
 
+  // unfollow event
   async remove(userId: number, eventId: number) {
     const isEventExist = this.checkEventExist(eventId);
     const isUserExist = this.checkUserExist(userId);
