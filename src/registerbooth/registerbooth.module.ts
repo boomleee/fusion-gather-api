@@ -4,6 +4,7 @@ import { RegisterboothController } from './registerbooth.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Registerbooth } from './entities/registerbooth.entity';
 import { User } from 'src/user/entities/user.entity';
+import { UserService } from 'src/user/user.service';
 import { Booth } from 'src/booth/entities/booth.entity';
 import { Event } from 'src/event/entities/event.entity';
 
@@ -15,6 +16,6 @@ import { Event } from 'src/event/entities/event.entity';
     TypeOrmModule.forFeature([Event]),
   ],
   controllers: [RegisterboothController],
-  providers: [RegisterboothService],
+  providers: [RegisterboothService, UserService],
 })
 export class RegisterboothModule {}

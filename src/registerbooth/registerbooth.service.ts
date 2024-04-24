@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { CreateRegisterboothDto } from './dto/create-registerbooth.dto';
 import { UpdateRegisterboothDto } from './dto/update-registerbooth.dto';
@@ -41,6 +42,7 @@ export class RegisterboothService {
     else return false;
   }
 
+  // check if user is registered to booth
   async checkUserIsRegistered(userId: number, boothId: number) {
     const registerbooth = await this.registerboothRepository.createQueryBuilder('registerbooth')
         .where('registerbooth.userId = :userId', { userId })
@@ -51,7 +53,7 @@ export class RegisterboothService {
     else return false;
 }
 
-
+  // register booth
   async create(createRegisterboothDto: CreateRegisterboothDto) {
     if (createRegisterboothDto.userId === null) {
       throw new BadRequestException(`User ID is required!`);
@@ -104,11 +106,22 @@ export class RegisterboothService {
     else return false;
   }
 
-  async findAllRequestByEventId(eventId: number) {
+  // get all vendor request by event id
+  async findAllRequestByEventId(eventId: number, userId: number) {
     const isEventExist = await this.checkEventExist(eventId);
+    const event = await this.eventRepository.findOne({
+      relations: {
+        author: true,
+      },
+      where: { id: eventId },
+    });
 
     if (!isEventExist) {
       throw new NotFoundException(`Event with ID ${eventId} not exist`);
+    }
+
+    if (event.author.id !== userId) {
+      throw new UnauthorizedException(`You are not the owner of this event`);
     }
 
     const registerbooth = await this.registerboothRepository
@@ -121,6 +134,7 @@ export class RegisterboothService {
     return registerbooth;
   };
 
+  // check if user is registered to booth
   async checkIsRegistered(userId: number, boothId: number) {
     const isUserExist = await this.checkUserExist(userId);
     const isBoothExist = await this.checkBoothExist(boothId);
@@ -148,6 +162,7 @@ export class RegisterboothService {
     return `This action returns a #${id} registerbooth`;
   }
 
+  // delete vendor request (decline request)
   async remove(userId: number, boothId: number) {
     const isUserExist = await this.checkUserExist(userId);
     const isBoothExist = await this.checkBoothExist(boothId);

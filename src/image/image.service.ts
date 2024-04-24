@@ -31,6 +31,7 @@ export class ImageService {
     else return false;
   }
 
+  // create image for event 
   async createImage(imageUrls, eventId, boothId): Promise<Image> {
     const event = await this.eventRepository.findOne({
       where: { id: eventId },
@@ -47,6 +48,7 @@ export class ImageService {
     return await this.imageRepository.save(image);
   }
 
+  // create image for booth
   async createBoothImages(imageUrls: string, boothId: number): Promise<Image> {
     const booth = await this.boothRepository.findOne({
       where: { id: boothId },
@@ -59,7 +61,7 @@ export class ImageService {
     return await this.imageRepository.save(image);
   }
   
-
+  // find images by event id
   async findImagesByEventId(eventId: number) {
 
     const isEventExist = await this.checkEventExist(eventId);
@@ -75,6 +77,7 @@ export class ImageService {
     return eventImages;
   }
 
+  // find images by booth id
   async findImagesByBoothId(boothId: number) {
       
       const isBoothExist = await this.checkBoothExist(boothId);
@@ -91,6 +94,7 @@ export class ImageService {
       return boothImages;
     }
 
+  // update image by event id
   async updateImagebyEventId(
     eventId,
     updateImageUrlsDto: UpdateImageUrlsDto,
@@ -103,6 +107,7 @@ export class ImageService {
       throw new NotFoundException(`Event ${eventId} not found`);
     }
 
+    // get image by event id
     const images = await this.imageRepository.find({
       where: { eventId: eventId },
     });

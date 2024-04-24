@@ -66,40 +66,6 @@ export default class WebhookController {
       const session = event.data.object;
       console.log('session', session);
       if (session.status === 'succeeded') {
-        const createTicketDto: CreateTicketDto = {
-          eventId: EventIdforTicket.id,
-          userId: UserIdforTicket.id,
-          isScanned: false,
-        };
-
-        const newTicket =
-          await this.ticketService.createTicketAfterSuccessfulPayment(
-            createTicketDto,
-          );
-        const qrCode = await this.qrCodeService.generateAndSaveQRCodeForTicket(
-          newTicket.id,
-        );
-        try {
-          const mailConfirm = await this.userRepository
-            .createQueryBuilder('user')
-            .where('user.id = :userId', { userId })
-            .getOne();
-          await this.mailerService.sendMail({
-            to: mailConfirm.email,
-            subject: 'Payment Success Notification',
-            attachDataUrls: true,
-            html: `
-              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Your payment was successful. Thank you for your purchase!</p>
-              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Below is your QR Code for the event:</p>
-              <div style="text-align: center;">
-                  <img src="${qrCode}" alt="QR Code" style="max-width: 100%; height: auto;">
-              </div>
-            `,
-          });
-        } catch (error) {
-          console.error('Error sending payment success email:', error);
-          throw new Error('Failed to send payment success email');
-        }
       }
     }
   }

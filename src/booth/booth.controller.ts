@@ -1,7 +1,8 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Res, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, HttpStatus, Res, UsePipes, ValidationPipe, UseGuards } from '@nestjs/common';
 import { BoothService } from './booth.service';
 import { CreateBoothDto } from './dto/create-booth.dto';
 import { UpdateBoothDto } from './dto/update-booth.dto';
+import { AuthGuard } from 'src/guards/auth.guard';
 
 @Controller('booth')
 export class BoothController {
@@ -33,7 +34,7 @@ export class BoothController {
   }
 
   @Patch(':userId/:boothId')
-  update(@Param('userId') userId: string, @Param('boothId') boothId: string, @Body() updateBoothDto: UpdateBoothDto) {
+  update(@Param('userId') userId: string, @Param('boothId') boothId: string, @Body() updateBoothDto: UpdateBoothDto){
     return this.boothService.update(+userId, +boothId, updateBoothDto);
   }
 

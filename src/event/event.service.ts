@@ -256,7 +256,6 @@ export class EventService {
     }
     return existingEvent;
   }
-
     // find latest 3 events
     async findLatestEvent(): Promise<Event[]> {
       const currentDate = new Date().toISOString();
@@ -628,7 +627,6 @@ export class EventService {
     if (existingEvent.isPublished) {
       throw new NotAcceptableException(`Event is already published`);
     }
-
     // check if event start date has passed
     const currentDate = new Date().toISOString();
     if (existingEvent.startDateTime < currentDate) {
@@ -703,6 +701,5 @@ export class EventService {
 
     return await this.eventRepository.save(existingEvent);
   }
-
 
 }
