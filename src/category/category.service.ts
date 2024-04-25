@@ -1,5 +1,5 @@
 /* eslint-disable prettier/prettier */
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { Injectable, NotAcceptableException, NotFoundException } from '@nestjs/common';
 import { CreateCategoryDto } from './dto/create-category.dto'; // Đảm bảo bạn đã tạo DTO cho Category
 import { UpdateCategoryDto } from './dto/update-category.dto'; // Đảm bảo bạn đã tạo DTO cho Category
 import { InjectRepository } from '@nestjs/typeorm';
@@ -23,7 +23,11 @@ export class CategoryService {
 
   async create(createCategoryDto: CreateCategoryDto) {
     const isCategoryNameExist = await this.checkCategoryNameExist(createCategoryDto.categoryName);
+    const isContainSpecialCharacterCategoryName = await this.containsSpecialCharacter(createCategoryDto.categoryName);
 
+    if(isContainSpecialCharacterCategoryName) {
+      throw new NotAcceptableException(`Category name must not contain special characters`);
+    }
     if (isCategoryNameExist) {
       throw new NotFoundException(`Category with name ${createCategoryDto.categoryName} already exists`);
     }
@@ -49,6 +53,11 @@ export class CategoryService {
 
   async update(id: number, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
     const existingCategory = await this.categoryRepository.findOne({ where: { id } });
+    const isContainSpecialCharacterCategoryName = await this.containsSpecialCharacter(updateCategoryDto.categoryName);
+
+    if(isContainSpecialCharacterCategoryName) {
+      throw new NotAcceptableException(`Category name must not contain special characters`);
+    }
 
     if (!existingCategory) {
       throw new NotFoundException(`Category with ID ${id} not found`);
@@ -66,5 +75,13 @@ export class CategoryService {
     }
 
     await this.categoryRepository.remove(categoryToRemove);
+  }
+
+  async containsSpecialCharacter(str: string): Promise<boolean> {
+    // Create a regular expression to check the string
+    const regex = /^[a-zA-Z\s]+$/;
+  
+    // Use the test() method to check the string
+    return !regex.test(str);
   }
 }

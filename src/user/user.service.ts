@@ -102,6 +102,12 @@ export class UserService {
     if(updateUserDto.sessionUserId !== id) {
       throw new UnauthorizedException(`You are not authorized to update this user`);
     }
+
+    const isFirstNameContainSpecialCharacter = await this.containsSpecialCharacter(updateUserDto.firstName);
+    const isLastNameContainSpecialCharacter = await this.containsSpecialCharacter(updateUserDto.lastName);
+    if(isFirstNameContainSpecialCharacter || isLastNameContainSpecialCharacter) {
+      throw new NotAcceptableException(`First name and last name must not contain special characters`);
+    }
     const existingUser = await this.userRepository.findOne({ where: { id } });
     if (!existingUser) {
       throw new NotFoundException(`User with ID ${id} not found`);
@@ -123,6 +129,14 @@ export class UserService {
     }
 
     await this.userRepository.remove(userToRemove);
+  }
+
+  async containsSpecialCharacter(str: string): Promise<boolean> {
+    // Create a regular expression to check the string
+    const regex = /^[a-zA-Z\s]+$/;
+  
+    // Use the test() method to check the string
+    return !regex.test(str);
   }
 
 }
