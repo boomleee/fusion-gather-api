@@ -32,18 +32,14 @@ export class ImageService {
   }
 
   // create image for event 
-  async createImage(imageUrls, eventId, boothId): Promise<Image> {
+  async createImage(imageUrls, eventId): Promise<Image> {
     const event = await this.eventRepository.findOne({
       where: { id: eventId },
     });
 
-    const booth = await this.boothRepository.findOne({
-      where: { id: boothId },
-    });
     const image = new Image();
     image.url = imageUrls;
     image.eventId = event;
-    image.boothId = booth;
 
     return await this.imageRepository.save(image);
   }

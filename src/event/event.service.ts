@@ -141,7 +141,7 @@ export class EventService {
       const newEvent = await this.eventRepository.save(event);
 
       for (const image of imageUrl) {
-        await this.imageService.createImage(image, newEvent.id, null);
+        await this.imageService.createImage(image, newEvent.id);
       }
       const qrCodeId = await this.qrCodeService.generateAndSaveQRCode(
         newEvent.id,
@@ -379,7 +379,7 @@ export class EventService {
       if (imageUrl) {
         await this.removeImagesByEventId(id);
         for (const image of imageUrl) {
-          this.imageService.createImage(image, id, null);
+          this.imageService.createImage(image, id);
         }
       }
       Object.assign(existingEvent, dtoWithoutImage);
