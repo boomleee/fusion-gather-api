@@ -77,11 +77,11 @@ export class CategoryService {
     await this.categoryRepository.remove(categoryToRemove);
   }
 
-  async containsSpecialCharacter(str: string) {
-    // Tạo một regular expression để kiểm tra ký tự đặc biệt
-    const regex = /^[a-zA-Z]+$/;
+  async containsSpecialCharacter(str: string): Promise<boolean> {
+    // Create a regular expression to check the string
+    const regex = /^[a-zA-Z\s]+$/;
   
-    // Sử dụng phương thức test() để kiểm tra chuỗi
+    // Use the test() method to check the string
     return !regex.test(str);
   }
 }
