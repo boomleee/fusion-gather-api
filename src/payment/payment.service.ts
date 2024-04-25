@@ -46,6 +46,15 @@ export class PaymentService {
   }
 
   async checkout(eventId: number, userId: number) {
+    const isEventExist = await this.eventRepository.findOne({where: {id: eventId}});
+    if (!isEventExist) {
+      throw new ForbiddenException('Event not found');
+    }
+
+    const isUserExist = await this.userRepository.findOne({ where: { id: userId } });
+    if (!isUserExist) {
+      throw new ForbiddenException('User not found');
+    }
     try {
       // Encrypt eventId and userId
       const combinedString = `${eventId}:${userId}`

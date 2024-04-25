@@ -22,6 +22,10 @@ export class CategoryService {
   }
 
   async create(createCategoryDto: CreateCategoryDto) {
+    if (!createCategoryDto.categoryName) {
+      throw new NotFoundException('Category name is required');
+    }
+
     const isCategoryNameExist = await this.checkCategoryNameExist(createCategoryDto.categoryName);
 
     if (isCategoryNameExist) {
@@ -48,6 +52,13 @@ export class CategoryService {
   }
 
   async update(id: number, updateCategoryDto: UpdateCategoryDto): Promise<Category> {
+    if (!id) {
+      throw new NotFoundException('Category ID is required');
+    }
+    if (!updateCategoryDto.categoryName) {
+      throw new NotFoundException('Category name is required');
+    }
+
     const existingCategory = await this.categoryRepository.findOne({ where: { id } });
 
     if (!existingCategory) {
@@ -59,6 +70,7 @@ export class CategoryService {
   }
 
   async remove(id: number): Promise<void> {
+    if (!id) throw new NotFoundException('Category ID is required');
     const categoryToRemove = await this.categoryRepository.findOne({ where: { id } });
 
     if (!categoryToRemove) {

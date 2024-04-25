@@ -98,6 +98,14 @@ export class UserService {
 
   // update user
   async update(id: number, updateUserDto: UpdateUserDto,): Promise<User> {
+    if (id === null || id === undefined) {
+      throw new ForbiddenException(`User ID is required`);
+    }
+
+    const isUserExist = await this.userRepository.findOne({ where: { id } });
+    if (!isUserExist) {
+      throw new NotFoundException(`User with ID ${id} not found`);
+    }
     const isDateValidate = await this.checkIsDateValid(updateUserDto.dob);
     if(updateUserDto.sessionUserId !== id) {
       throw new UnauthorizedException(`You are not authorized to update this user`);

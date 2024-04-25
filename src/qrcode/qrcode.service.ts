@@ -121,6 +121,10 @@ export class QrCodeService {
 
   // Get QR Code data for an Event
   async getQRCodeData(eventId): Promise<any> {
+    const isEventExist = await this.eventRepository.findOne({ where: { id: eventId } });
+    if (!isEventExist) {
+      throw new NotFoundException('Event not found');
+    }
     try {
       // Fetch QRCode data from the database
       const qrcode = await this.qrcodeRepository
@@ -143,6 +147,10 @@ export class QrCodeService {
 
   // Get QR Code data for a Booth
   async getQRCodeDataForBooth(boothId): Promise<any> {
+    const isBoothExist = await this.boothRepository.findOne({ where: { id: boothId } });
+    if (!isBoothExist) {
+      throw new NotFoundException('Booth not found');
+    }
     try {
       // Fetch QRCode data from the database
       const qrcode = await this.qrcodeRepository
