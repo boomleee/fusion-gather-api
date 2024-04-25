@@ -323,6 +323,7 @@ export class BoothService {
       <p>Hello, ${vendor.user.firstName} ${vendor.user.lastName}</p>
       <p>You have been assigned as the owner of booth <strong>${existingBooth.name}</strong> in event <strong>${existingBooth.eventId.title}</strong>.</p>
       <p>Please login to your account to view the booth details and update it as soon as posible.</p>
+      <a href ="https://www.fusiongather.me/event/pending/mybooth">Click here to update your booth </a>
       <p>Thank you!</p>`,
     });
     return await this.boothRepository.save(existingBooth);
