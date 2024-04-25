@@ -29,6 +29,16 @@ export class PaymentController {
         throw new BadRequestException('User id is missing');
       }
 
+      const isOwner = await this.paymentService.checkIsOwner(eventId, userId);
+      if (isOwner) {
+        throw new ForbiddenException('Owner cannot buy ticket of their event');
+      }
+
+      const isVendor = await this.paymentService.checkIsVendor(eventId, userId);
+      if (isVendor) {
+        throw new ForbiddenException('Vendor cannot buy ticket for event they are participating');
+      }
+
      const isBuyTicket = await this.paymentService.checkIsBuyTicket(eventId, userId);
       if (isBuyTicket) {
         throw new ForbiddenException('You have already bought this ticket');

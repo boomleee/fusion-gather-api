@@ -15,6 +15,7 @@ import { User } from 'src/user/entities/user.entity';
 import { MailerService } from '@nestjs-modules/mailer';
 import * as QRCode from 'qrcode';
 import { equal } from 'assert';
+import { Booth } from 'src/booth/entities/booth.entity';
 
 @Injectable()
 export class TicketService {
@@ -25,6 +26,8 @@ export class TicketService {
     private readonly eventRepository: Repository<Event>,
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
+    @InjectRepository(Booth)
+    private readonly boothRepository: Repository<Booth>,
     private mailerService: MailerService,
   ) {}
 
@@ -109,103 +112,168 @@ export class TicketService {
     return formattedDateTime;
   }
 
+  async checkIsOwner(eventId: number, userId: number): Promise<boolean> {
+    const isOwner = await this.eventRepository
+        .createQueryBuilder('event')
+        .where('event.id = :eventId', { eventId: eventId })
+        .andWhere('event.userId = :userId', { userId: userId })
+        .getOne();
+    if (isOwner) {
+      return true;
+    }
+    return false;
+  }
+
+  async checkIsVendor(eventId: number, userId: number): Promise<boolean> {
+    const isVendor = await this.boothRepository
+        .createQueryBuilder('booth')
+        .where('booth.eventId = :eventId', { eventId: eventId })
+        .andWhere('booth.userId = :userId', { userId: userId })
+        .getOne();
+    if (isVendor) {
+      return true;
+    }
+    return false;
+  }
+
   // create ticket after successful payment and send ticket QR Code email to user
   async createTicketAfterSuccessfulPayment(
     createTicketDto: CreateTicketDto,
   ): Promise<Ticket> {
-    const isBuyTicket = await this.ticketRepository.findOne({
-      where: { eventId: { id: createTicketDto.eventId }, userId: { id: createTicketDto.userId } },
-    });
+    try {
+      const isBuyTicket = await this.ticketRepository.findOne({
+        where: {
+          eventId: { id: createTicketDto.eventId },
+          userId: { id: createTicketDto.userId },
+        },
+      });
 
-    if (isBuyTicket) {
-      throw new ForbiddenException('You have already registered for this event');
+      if (isBuyTicket) {
+        throw new ForbiddenException(
+          'You have already registered for this event',
+        );
+      }
+      const ticketPartial: DeepPartial<Ticket> = {
+        eventId: { id: createTicketDto.eventId },
+        userId: { id: createTicketDto.userId },
+        isScanned: createTicketDto.isScanned,
+      };
+
+      const ticket = await this.ticketRepository.save(ticketPartial);
+
+      const ticketData = await this.ticketRepository
+        .createQueryBuilder('ticket')
+        .innerJoinAndSelect('ticket.eventId', 'event')
+        .where('ticket.id = :ticketId', { ticketId: ticket.id })
+        .getOne();
+
+      const qrData = { ticketId: ticket.id };
+      const qrDataString = JSON.stringify(qrData);
+      const qrCodeImage = await QRCode.toDataURL(qrDataString);
+      const mailConfirm = await this.userRepository.findOne({
+        where: { id: createTicketDto.userId },
+      });
+      const formattedDateTime = await this.formatDateTime(
+        ticketData.eventId.startDateTime,
+      );
+
+      await this.mailerService.sendMail({
+        to: mailConfirm.email,
+        subject: 'Payment Success Notification',
+        attachDataUrls: true,
+        html: `
+            <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Your payment was successful. Thank you for your purchase!</p>
+            <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Below is your QR Code for the event <strong>${ticketData.eventId.title}</strong>:</p>
+            <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Event start: <strong>${formattedDateTime}</strong></p>
+            <div style="text-align: center;">
+                <img src="${qrCodeImage}" alt="QR Code" style="max-width: 100%; height: auto;">
+            </div>
+          `,
+      });
+      return ticket;
+    } catch (error) {
+      console.error('Error creating ticket:', error);
+      throw error;
     }
-    const ticketPartial: DeepPartial<Ticket> = {
-      eventId: { id: createTicketDto.eventId },
-      userId: { id: createTicketDto.userId },
-      isScanned: createTicketDto.isScanned,
-    };
-
-    const ticket = await this.ticketRepository.save(ticketPartial);
-
-    const ticketData = await this.ticketRepository
-      .createQueryBuilder('ticket')
-      .innerJoinAndSelect('ticket.eventId', 'event')
-      .where('ticket.id = :ticketId', { ticketId: ticket.id })
-      .getOne();
-
-    const qrData = { ticketId: ticket.id };
-    const qrDataString = JSON.stringify(qrData);
-    const qrCodeImage = await QRCode.toDataURL(qrDataString);
-    const mailConfirm = await this.userRepository.findOne({
-      where: { id: createTicketDto.userId },
-    });
-    const formattedDateTime = await this.formatDateTime(
-      ticketData.eventId.startDateTime,
-    );
-
-    await this.mailerService.sendMail({
-      to: mailConfirm.email,
-      subject: 'Payment Success Notification',
-      attachDataUrls: true,
-      html: `
-              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Your payment was successful. Thank you for your purchase!</p>
-              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Below is your QR Code for the event <strong>${ticketData.eventId.title}</strong>:</p>
-              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Event start: <strong>${formattedDateTime}</strong></p>
-              <div style="text-align: center;">
-                  <img src="${qrCodeImage}" alt="QR Code" style="max-width: 100%; height: auto;">
-              </div>
-            `,
-    });
-    return ticket;
   }
 
   // create free ticket and send ticket QR Code email to user
   async createFreeTicket(createTicketDto: CreateTicketDto): Promise<Ticket> {
-    const isBuyTicket = await this.ticketRepository.findOne({
-      where: { eventId: { id: createTicketDto.eventId }, userId: { id: createTicketDto.userId } },
-    });
+    try {
+      //check if user is owner of the event
+      const isOwner = await this.eventRepository
+        .createQueryBuilder('event')
+        .where('event.id = :eventId', { eventId: createTicketDto.eventId })
+        .andWhere('event.userId = :userId', { userId: createTicketDto.userId })
+        .getOne();
+      if (isOwner) {
+        throw new ForbiddenException('You cannot register for your own event');
+      }
 
-    if (isBuyTicket) {
-      throw new ForbiddenException('You have already registered for this event');
+      //check if user is vendor of the event
+      const isVendor = await this.boothRepository
+        .createQueryBuilder('booth')
+        .where('booth.eventId = :eventId', { eventId: createTicketDto.eventId })
+        .andWhere('booth.userId = :userId', { userId: createTicketDto.userId })
+        .getOne();
+      if (isVendor) {
+        throw new ForbiddenException(
+          'You cannot register event where you are a vendor',
+        );
+      }
+
+      const isBuyTicket = await this.ticketRepository.findOne({
+        where: {
+          eventId: { id: createTicketDto.eventId },
+          userId: { id: createTicketDto.userId },
+        },
+      });
+
+      if (isBuyTicket) {
+        throw new ForbiddenException(
+          'You have already registered for this event',
+        );
+      }
+      const ticketPartial: DeepPartial<Ticket> = {
+        eventId: { id: createTicketDto.eventId },
+        userId: { id: createTicketDto.userId },
+        isScanned: createTicketDto.isScanned,
+      };
+
+      const ticket = await this.ticketRepository.save(ticketPartial);
+
+      const ticketData = await this.ticketRepository
+        .createQueryBuilder('ticket')
+        .innerJoinAndSelect('ticket.eventId', 'event')
+        .where('ticket.id = :ticketId', { ticketId: ticket.id })
+        .getOne();
+
+      const qrData = { ticketId: ticket.id };
+      const qrDataString = JSON.stringify(qrData);
+      const qrCodeImage = await QRCode.toDataURL(qrDataString);
+      const mailConfirm = await this.userRepository.findOne({
+        where: { id: createTicketDto.userId },
+      });
+      const formattedDateTime = await this.formatDateTime(
+        ticketData.eventId.startDateTime,
+      );
+
+      await this.mailerService.sendMail({
+        to: mailConfirm.email,
+        subject: 'Free Ticket Notification',
+        attachDataUrls: true,
+        html: `
+            <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">You have successfully register an event!</p>
+            <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Below is your QR Code for the event <strong>${ticketData.eventId.title}</strong>:</p>
+            <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Event start: <strong>${formattedDateTime}</strong></p>
+            <div style="text-align: center;">
+                <img src="${qrCodeImage}" alt="QR Code" style="max-width: 100%; height: auto;">
+            </div>
+          `,
+      });
+      return ticket;
+    } catch (error) {
+      return error;
     }
-    const ticketPartial: DeepPartial<Ticket> = {
-      eventId: { id: createTicketDto.eventId },
-      userId: { id: createTicketDto.userId },
-      isScanned: createTicketDto.isScanned,
-    };
-
-    const ticket = await this.ticketRepository.save(ticketPartial);
-
-    const ticketData = await this.ticketRepository
-      .createQueryBuilder('ticket')
-      .innerJoinAndSelect('ticket.eventId', 'event')
-      .where('ticket.id = :ticketId', { ticketId: ticket.id })
-      .getOne();
-
-    const qrData = { ticketId: ticket.id };
-    const qrDataString = JSON.stringify(qrData);
-    const qrCodeImage = await QRCode.toDataURL(qrDataString);
-    const mailConfirm = await this.userRepository.findOne({
-      where: { id: createTicketDto.userId },
-    });
-    const formattedDateTime = await this.formatDateTime(
-      ticketData.eventId.startDateTime,
-    );
-
-    await this.mailerService.sendMail({
-      to: mailConfirm.email,
-      subject: 'Free Ticket Notification',
-      attachDataUrls: true,
-      html: `
-              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">You have successfully register an event!</p>
-              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Below is your QR Code for the event <strong>${ticketData.eventId.title}</strong>:</p>
-              <p style="font-family: Arial, sans-serif; font-size: 16px; color: #333; line-height: 1.6;">Event start: <strong>${formattedDateTime}</strong></p>
-              <div style="text-align: center;">
-                  <img src="${qrCodeImage}" alt="QR Code" style="max-width: 100%; height: auto;">
-              </div>
-            `,
-    });
-    return ticket;
   }
 }

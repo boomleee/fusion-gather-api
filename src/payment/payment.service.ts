@@ -13,6 +13,7 @@ import { User } from 'src/user/entities/user.entity';
 import { QrCodeService } from 'src/qrcode/qrcode.service';
 import * as CryptoJS from 'crypto-js';
 import { Ticket } from 'src/ticket/entities/ticket.entity';
+import { Booth } from 'src/booth/entities/booth.entity';
 
 @Injectable()
 export class PaymentService {
@@ -28,10 +29,35 @@ export class PaymentService {
     private MailerService: MailerService,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectRepository(Ticket) private readonly ticketRepository: Repository<Ticket>,
+    @InjectRepository(Booth)
+    private readonly boothRepository: Repository<Booth>,
   ) {
     this.stripe = new Stripe(process.env.STRIPE_SECRET_KEY, {
       apiVersion: '2024-04-10',
     });
+  }
+  async checkIsOwner(eventId: number, userId: number): Promise<boolean> {
+    const isOwner = await this.eventRepository
+        .createQueryBuilder('event')
+        .where('event.id = :eventId', { eventId: eventId })
+        .andWhere('event.userId = :userId', { userId: userId })
+        .getOne();
+    if (isOwner) {
+      return true;
+    }
+    return false;
+  }
+
+  async checkIsVendor(eventId: number, userId: number): Promise<boolean> {
+    const isVendor = await this.boothRepository
+        .createQueryBuilder('booth')
+        .where('booth.eventId = :eventId', { eventId: eventId })
+        .andWhere('booth.userId = :userId', { userId: userId })
+        .getOne();
+    if (isVendor) {
+      return true;
+    }
+    return false;
   }
 
   async checkIsBuyTicket (eventId: number, userId: number) :Promise<boolean> {
